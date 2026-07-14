@@ -4,60 +4,44 @@
  */
 package model;
 
+/**
+ *
+ * @author Risco
+ */
 public class Usuario {
-
     private int idUsuario;
     private String username;
-    private String passwordHash;
-    private int idRol;
+    private String password;
+    private String nombre;
+    private String apellido;
+    private String rol; // 'ADMINISTRADOR', 'VENDEDOR', 'CLIENTE_WEB'
+    private String estado;
 
+    public Usuario() {}
 
-    public Usuario() {
-    }
-
-
-    public Usuario(int idUsuario, String username, 
-                   String passwordHash, int idRol) {
-
+    public Usuario(int idUsuario, String username, String password, String nombre, String apellido, String rol, String estado) {
         this.idUsuario = idUsuario;
         this.username = username;
-        this.passwordHash = passwordHash;
-        this.idRol = idRol;
+        this.password = password;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.rol = rol;
+        this.estado = estado;
     }
 
-
-    public int getIdUsuario() {
-        return idUsuario;
-    }
-
-    public void setIdUsuario(int idUsuario) {
-        this.idUsuario = idUsuario;
-    }
-
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-
-    public int getIdRol() {
-        return idRol;
-    }
-
-    public void setIdRol(int idRol) {
-        this.idRol = idRol;
-    }
+    // Getters y Setters
+    public int getIdUsuario() { return idUsuario; }
+    public void setIdUsuario(int idUsuario) { this.idUsuario = idUsuario; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getApellido() { return apellido; }
+    public void setApellido(String apellido) { this.apellido = apellido; }
+    public String getRol() { return rol; }
+    public void setRol(String rol) { this.rol = rol; }
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 }

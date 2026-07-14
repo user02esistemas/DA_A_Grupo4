@@ -1,179 +1,106 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package DAO;
+package dao;
 
-import conexion.ConexionBD;
+import config.ConexionBD;
 import model.Conductor;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ConductorDAO {
 
-    // LISTAR CONDUCTORES
-    public ArrayList<Conductor> listarConductores() {
-
-        ArrayList<Conductor> lista = new ArrayList<>();
-
-        String sql
-                = "SELECT id_conductor, nombre, apellido, dni, "
-                + "licencia, estado, id_usuario "
-                + "FROM Conductores";
-
-        try {
-
-            Connection cn = ConexionBD
-                    .getInstancia()
-                    .getConexion();
-
-            PreparedStatement ps = cn.prepareStatement(sql);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                Conductor conductor = new Conductor();
-
-                conductor.setIdConductor(
-                        rs.getInt("id_conductor")
-                );
-
-                conductor.setNombre(
-                        rs.getString("nombre")
-                );
-
-                conductor.setApellido(
-                        rs.getString("apellido")
-                );
-
-                conductor.setDni(
-                        rs.getString("dni")
-                );
-
-                conductor.setLicencia(
-                        rs.getString("licencia")
-                );
-
-                conductor.setEstado(
-                        rs.getString("estado")
-                );
-
-                conductor.setIdUsuario(
-                        rs.getObject("id_usuario", Integer.class)
-                );
-
-                lista.add(conductor);
-
-            }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Error al listar conductores: "
-                    + e.getMessage()
-            );
-
+    public List<Conductor> listarConductoresDisponibles() {
+        List<Conductor> lista = new ArrayList<>();
+        String sql = "SELECT id_conductor, dni, nombre, apellido, nro_licencia, estado FROM Conductores WHERE estado = 'DISPONIBLE'";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) lista.add(mapear(rs));
+        } catch (SQLException e) {
+            System.err.println("Error al listar conductores disponibles: " + e.getMessage());
         }
-
         return lista;
-
     }
 
-    // INSERTAR CONDUCTOR
-    public boolean insertarConductor(Conductor conductor) {
+    public List<Conductor> listarConductores() {
+        List<Conductor> lista = new ArrayList<>();
+        String sql = "SELECT id_conductor, dni, nombre, apellido, nro_licencia, estado FROM Conductores ORDER BY apellido, nombre";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) lista.add(mapear(rs));
+        } catch (SQLException e) {
+            System.err.println("Error al listar conductores: " + e.getMessage());
+        }
+        return lista;
+    }
 
-        String sql
-                = "INSERT INTO Conductores "
-                + "(nombre, apellido, dni, licencia, estado, id_usuario) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
-
-        try {
-
-            Connection cn = ConexionBD
-                    .getInstancia()
-                    .getConexion();
-
-            PreparedStatement ps
-                    = cn.prepareStatement(sql);
-
-            ps.setString(1, conductor.getNombre());
-
-            ps.setString(2, conductor.getApellido());
-
-            ps.setString(3, conductor.getDni());
-
-            ps.setString(4, conductor.getLicencia());
-
-            ps.setString(5, conductor.getEstado());
-
-            if (conductor.getIdUsuario() != null) {
-
-                ps.setInt(6, conductor.getIdUsuario());
-
-            } else {
-
-                ps.setNull(6, java.sql.Types.INTEGER);
-
+    public Conductor obtenerPorId(int id) {
+        String sql = "SELECT id_conductor, dni, nombre, apellido, nro_licencia, estado FROM Conductores WHERE id_conductor = ?";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapear(rs);
             }
-
-            ps.executeUpdate();
-
-            return true;
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Error al insertar conductor: "
-                    + e.getMessage()
-            );
-
-            return false;
-
+        } catch (SQLException e) {
+            System.err.println("Error al obtener conductor: " + e.getMessage());
         }
-
+        return null;
     }
 
-    // ACTUALIZAR DISPONIBILIDAD
-    public boolean actualizarEstado(int idConductor, String estado) {
-
-        String sql
-                = "UPDATE Conductores "
-                + "SET estado=? "
-                + "WHERE id_conductor=?";
-
-        try {
-
-            Connection cn
-                    = ConexionBD
-                            .getInstancia()
-                            .getConexion();
-
-            PreparedStatement ps
-                    = cn.prepareStatement(sql);
-
-            ps.setString(1, estado);
-
-            ps.setInt(2, idConductor);
-
-            ps.executeUpdate();
-
-            return true;
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Error al actualizar estado: "
-                    + e.getMessage()
-            );
-
+    public boolean insertar(Conductor c) {
+        String sql = "INSERT INTO Conductores (dni, nombre, apellido, nro_licencia, estado) VALUES (?, ?, ?, ?, ?)";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, c.getDni());
+            ps.setString(2, c.getNombre());
+            ps.setString(3, c.getApellido());
+            ps.setString(4, c.getNroLicencia());
+            ps.setString(5, c.getEstado() != null ? c.getEstado() : "DISPONIBLE");
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al insertar conductor: " + e.getMessage());
             return false;
-
         }
-
     }
 
+    public boolean actualizar(Conductor c) {
+        String sql = "UPDATE Conductores SET dni=?, nombre=?, apellido=?, nro_licencia=?, estado=? WHERE id_conductor=?";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, c.getDni());
+            ps.setString(2, c.getNombre());
+            ps.setString(3, c.getApellido());
+            ps.setString(4, c.getNroLicencia());
+            ps.setString(5, c.getEstado());
+            ps.setInt(6, c.getIdConductor());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar conductor: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean eliminarLogico(int idConductor) {
+        String sql = "UPDATE Conductores SET estado = 'INACTIVO' WHERE id_conductor = ?";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idConductor);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar conductor: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private Conductor mapear(ResultSet rs) throws SQLException {
+        return new Conductor(
+            rs.getInt("id_conductor"),
+            rs.getString("dni"),
+            rs.getString("nombre"),
+            rs.getString("apellido"),
+            rs.getString("nro_licencia"),
+            rs.getString("estado")
+        );
+    }
 }

@@ -1,98 +1,52 @@
 package model;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public class Viaje {
-
     private int idViaje;
-    private LocalDateTime fechaHoraSalida;
-    private LocalDateTime fechaHoraLlegadaEst;
-    private String estado;
-    private int idBus;
     private int idRuta;
+    private int idBus;
+    private Timestamp fechaHora; // Fecha y Hora de Salida
+    private Timestamp fechaHoraLlegadaEstimada; // NUEVO: Fecha y hora de llegada estimada
+    private String estado; // 'PROGRAMADO', 'EN_RUTA', 'FINALIZADO', 'CANCELADO'
 
-    public Viaje() {
+    public Viaje() {}
+
+    // Constructor sin ID (Ideal para inserciones)
+    public Viaje(int idRuta, int idBus, Timestamp fechaHora, Timestamp fechaHoraLlegadaEstimada, String estado) {
+        this.idRuta = idRuta;
+        this.idBus = idBus;
+        this.fechaHora = fechaHora;
+        this.fechaHoraLlegadaEstimada = fechaHoraLlegadaEstimada;
+        this.estado = estado;
     }
 
-    public Viaje(
-            int idViaje,
-            LocalDateTime fechaHoraSalida,
-            LocalDateTime fechaHoraLlegadaEst,
-            String estado,
-            int idBus,
-            int idRuta
-    ) {
+    // Constructor completo para consultas
+    public Viaje(int idViaje, int idRuta, int idBus, Timestamp fechaHora, Timestamp fechaHoraLlegadaEstimada, String estado) {
         this.idViaje = idViaje;
-        this.fechaHoraSalida = fechaHoraSalida;
-        this.fechaHoraLlegadaEst = fechaHoraLlegadaEst;
-        this.estado = estado;
-        this.idBus = idBus;
         this.idRuta = idRuta;
-    }
-
-    public Viaje(
-            LocalDateTime fechaHoraSalida,
-            LocalDateTime fechaHoraLlegadaEst,
-            String estado,
-            int idBus,
-            int idRuta
-    ) {
-        this.fechaHoraSalida = fechaHoraSalida;
-        this.fechaHoraLlegadaEst = fechaHoraLlegadaEst;
-        this.estado = estado;
         this.idBus = idBus;
-        this.idRuta = idRuta;
-    }
-
-    public int getIdViaje() {
-        return idViaje;
-    }
-
-    public void setIdViaje(int idViaje) {
-        this.idViaje = idViaje;
-    }
-
-    public LocalDateTime getFechaHoraSalida() {
-        return fechaHoraSalida;
-    }
-
-    public void setFechaHoraSalida(
-            LocalDateTime fechaHoraSalida
-    ) {
-        this.fechaHoraSalida = fechaHoraSalida;
-    }
-
-    public LocalDateTime getFechaHoraLlegadaEst() {
-        return fechaHoraLlegadaEst;
-    }
-
-    public void setFechaHoraLlegadaEst(
-            LocalDateTime fechaHoraLlegadaEst
-    ) {
-        this.fechaHoraLlegadaEst = fechaHoraLlegadaEst;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
+        this.fechaHora = fechaHora;
+        this.fechaHoraLlegadaEstimada = fechaHoraLlegadaEstimada;
         this.estado = estado;
     }
 
-    public int getIdBus() {
-        return idBus;
-    }
+    // Getters y Setters
+    public int getIdViaje() { return idViaje; }
+    public void setIdViaje(int idViaje) { this.idViaje = idViaje; }
 
-    public void setIdBus(int idBus) {
-        this.idBus = idBus;
-    }
+    public int getIdRuta() { return idRuta; }
+    public void setIdRuta(int idRuta) { this.idRuta = idRuta; }
 
-    public int getIdRuta() {
-        return idRuta;
-    }
+    public int getIdBus() { return idBus; }
+    public void setIdBus(int idBus) { this.idBus = idBus; }
 
-    public void setIdRuta(int idRuta) {
-        this.idRuta = idRuta;
-    }
+    public Timestamp getFechaHora() { return fechaHora; }
+    public void setFechaHora(Timestamp fechaHora) { this.fechaHora = fechaHora; }
+
+    public Timestamp getFechaHoraLlegadaEstimada() { return fechaHoraLlegadaEstimada; }
+    public void setFechaHoraLlegadaEstimada(Timestamp fechaHoraLlegadaEstimada) { this.fechaHoraLlegadaEstimada = fechaHoraLlegadaEstimada; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 }
