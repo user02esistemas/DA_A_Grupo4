@@ -460,6 +460,48 @@ public class ViajeDAO {
     }
 
     /**
+     * Anula un pasaje (cambia su estado a ANULADO).
+     * Solo ADMINISTRADOR y VENDEDOR pueden ejecutar esta acción.
+     * @return true si se anuló correctamente
+     */
+    public boolean anularPasaje(int idPasaje) {
+        String sql = "UPDATE Pasaje SET estado = 'ANULADO' WHERE id_pasaje = ? AND estado = 'ACTIVO'";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idPasaje);
+            int filas = ps.executeUpdate();
+            return filas > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al anular pasaje: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Registra un pago en la tabla Pago.
+     * Para ventas de admin/vendedor, se asigna el id del vendedor.
+     * Para compras de cliente web, id_vendedor se deja NULL.
+     */
+    public boolean registrarPago(int idPasaje, double monto, String metodoPago, Integer idVendedor) {
+        String sql = "INSERT INTO Pago (monto_total, metodo_pago, id_pasaje, id_vendedor) VALUES (?, ?, ?, ?)";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setDouble(1, monto);
+            ps.setString(2, metodoPago);
+            ps.setInt(3, idPasaje);
+            if (idVendedor != null) {
+                ps.setInt(4, idVendedor);
+            } else {
+                ps.setNull(4, java.sql.Types.INTEGER);
+            }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error al registrar pago: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Método interno reutilizable para ejecutar consultas de listado de ventas
      * con filtros adicionales.
      */

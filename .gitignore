@@ -2,3 +2,4 @@ build/
 nbproject/private/private.properties
 nbproject/private/private.properties
 DA_MovilBus/src/java/config/database.properties
+/DA_MovilBus/nbproject/private

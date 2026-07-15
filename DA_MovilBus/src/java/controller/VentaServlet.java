@@ -127,6 +127,12 @@ public class VentaServlet extends HttpServlet {
         else if ("guardarVentaMulti".equals(accion)) {
             procesarVentaMultiple(request, response);
         }
+        // ============================================================
+        // ACCIÓN: anularPasaje (REEMBOLSO - solo admin/vendedor)
+        // ============================================================
+        else if ("anularPasaje".equals(accion)) {
+            procesarAnulacion(request, response);
+        }
     }
     
     // =================================================================
@@ -148,6 +154,15 @@ public class VentaServlet extends HttpServlet {
         String baseRedirect = "VentaServlet?accion=verAsientos&idViaje=" + idViajeParam + 
                               "&idOrigen=" + idOrigen + "&idDestino=" + idDestino + "&fecha=" + fecha;
 
+        // Obtener el vendedor de la sesión (si es admin/vendedor)
+        HttpSession sess = request.getSession(false);
+        Usuario userVenta = (sess != null) ? (Usuario) sess.getAttribute("usuarioSesion") : null;
+        Integer idVendedor = null;
+        if (userVenta != null && ("ADMINISTRADOR".equalsIgnoreCase(userVenta.getRol()) 
+                || "VENDEDOR".equalsIgnoreCase(userVenta.getRol()))) {
+            idVendedor = userVenta.getIdUsuario();
+        }
+
         if (numAsientoParam == null || numAsientoParam.trim().isEmpty() || idViajeParam == null) {
             response.sendRedirect(baseRedirect + "&status=error");
             return;
@@ -163,7 +178,7 @@ public class VentaServlet extends HttpServlet {
             con.setAutoCommit(false);
             try {
                 int idCliente = buscarOCrearCliente(con, dni, nombreApellido[0], nombreApellido[1]);
-                int idPasajeGenerado = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal);
+                int idPasajeGenerado = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal, idVendedor);
                 con.commit();
                 response.sendRedirect("pasaje-confirmado.jsp?idPasaje=" + idPasajeGenerado);
             } catch (SQLException ex) {
@@ -189,6 +204,15 @@ public class VentaServlet extends HttpServlet {
         
         String baseRedirect = "VentaServlet?accion=verAsientos&idViaje=" + idViajeParam + 
                               "&idOrigen=" + idOrigen + "&idDestino=" + idDestino + "&fecha=" + fecha;
+
+        // Obtener el vendedor de la sesión (si es admin/vendedor)
+        HttpSession sess = request.getSession(false);
+        Usuario userVenta = (sess != null) ? (Usuario) sess.getAttribute("usuarioSesion") : null;
+        Integer idVendedor = null;
+        if (userVenta != null && ("ADMINISTRADOR".equalsIgnoreCase(userVenta.getRol()) 
+                || "VENDEDOR".equalsIgnoreCase(userVenta.getRol()))) {
+            idVendedor = userVenta.getIdUsuario();
+        }
 
         if (idViajeParam == null || idViajeParam.isEmpty()) {
             response.sendRedirect(baseRedirect + "&status=error");
@@ -225,7 +249,7 @@ public class VentaServlet extends HttpServlet {
                     String[] nombreApellido = separarNombre(nombrePasajero);
                     
                     int idCliente = buscarOCrearCliente(con, dni, nombreApellido[0], nombreApellido[1]);
-                    int idPasaje = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal);
+                    int idPasaje = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal, idVendedor);
                     
                     if (idsGenerados.length() > 0) idsGenerados.append(",");
                     idsGenerados.append(idPasaje);
@@ -249,6 +273,44 @@ public class VentaServlet extends HttpServlet {
         }
     }
     
+    // =================================================================
+    //  ACCIÓN: ANULAR PASAJE (Reembolso)
+    //  Solo ADMINISTRADOR y VENDEDOR pueden anular
+    // =================================================================
+    private void procesarAnulacion(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        HttpSession sess = request.getSession(false);
+        Usuario userAnul = (sess != null) ? (Usuario) sess.getAttribute("usuarioSesion") : null;
+        
+        // 🔒 Verificar que sea ADMIN o VENDEDOR
+        if (userAnul == null || (!"ADMINISTRADOR".equalsIgnoreCase(userAnul.getRol()) 
+                && !"VENDEDOR".equalsIgnoreCase(userAnul.getRol()))) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+        
+        String idPasajeStr = request.getParameter("idPasaje");
+        if (idPasajeStr == null || idPasajeStr.isEmpty()) {
+            response.sendRedirect("VentaServlet?accion=historial&status=error");
+            return;
+        }
+        
+        try {
+            int idPasaje = Integer.parseInt(idPasajeStr);
+            boolean exito = viajeDAO.anularPasaje(idPasaje);
+            
+            if (exito) {
+                System.out.println("====== [OK] PASAJE #" + idPasaje + " ANULADO (REEMBOLSO) ======");
+                response.sendRedirect("VentaServlet?accion=historial&status=anulado");
+            } else {
+                response.sendRedirect("VentaServlet?accion=historial&status=error");
+            }
+        } catch (NumberFormatException e) {
+            response.sendRedirect("VentaServlet?accion=historial&status=error");
+        }
+    }
+
     // =================================================================
     //  MÉTODOS AUXILIARES
     // =================================================================
@@ -289,7 +351,7 @@ public class VentaServlet extends HttpServlet {
         throw new SQLException("No se pudo crear el cliente con DNI: " + dni);
     }
     
-    private int insertarPasaje(Connection con, int idViaje, int idCliente, int numAsiento, double precio) throws SQLException {
+    private int insertarPasaje(Connection con, int idViaje, int idCliente, int numAsiento, double precio, Integer idVendedor) throws SQLException {
         String sql = "INSERT INTO Pasaje (id_viaje, id_cliente, id_bus_asiento, precio_pagado, estado, fecha_emision) " +
                      "OUTPUT INSERTED.id_pasaje " +
                      "VALUES (?, ?, (SELECT id_bus_asiento FROM Bus_Asiento WHERE id_bus = (SELECT id_bus FROM Viaje WHERE id_viaje = ?) AND numero_asiento = ?), ?, 'ACTIVO', GETDATE())";
@@ -300,7 +362,22 @@ public class VentaServlet extends HttpServlet {
             ps.setInt(4, numAsiento);
             ps.setDouble(5, precio);
             try (var rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) {
+                    int idPasaje = rs.getInt(1);
+                    // ✅ Crear registro en Pago automáticamente 
+                    String sqlPago = "INSERT INTO Pago (monto_total, metodo_pago, id_pasaje, id_vendedor) VALUES (?, 'EFECTIVO', ?, ?)";
+                    try (PreparedStatement psPago = con.prepareStatement(sqlPago)) {
+                        psPago.setDouble(1, precio);
+                        psPago.setInt(2, idPasaje);
+                        if (idVendedor != null) {
+                            psPago.setInt(3, idVendedor);
+                        } else {
+                            psPago.setNull(3, java.sql.Types.INTEGER);
+                        }
+                        psPago.executeUpdate();
+                    }
+                    return idPasaje;
+                }
             }
         }
         throw new SQLException("No se pudo insertar el pasaje para asiento " + numAsiento);

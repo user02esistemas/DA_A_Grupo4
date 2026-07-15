@@ -47,6 +47,14 @@
             <p class="text-white-50 small mb-0">Acceso exclusivo para administradores y vendedores</p>
         </div>
         <div class="card-body p-4">
+            <%-- Alerta de cuenta creada exitosamente --%>
+            <% if ("success".equals(request.getParameter("registroStatus"))) { %>
+                <div class="alert alert-success py-2 text-center small" role="alert">
+                    <i class="bi bi-check-circle me-1"></i> <strong>¡Cuenta creada exitosamente!</strong>
+                    <br>Inicia sesión con tu DNI y contraseña para acceder.
+                </div>
+            <% } %>
+
             <% if (request.getAttribute("error") != null) { %>
                 <div class="alert alert-danger py-2 text-center small" role="alert">
                     <i class="bi bi-exclamation-triangle me-1"></i> <%= request.getAttribute("error") %>

@@ -46,6 +46,9 @@
         <a class="nav-link <%= "historial".equals(active) ? "active" : "" %>" href="VentaServlet?accion=historial">
             <i class="bi bi-clock-history"></i> Historial
         </a>
+        <a class="nav-link <%= "encomiendas".equals(active) ? "active" : "" %>" href="EncomiendaServlet?accion=listar">
+            <i class="bi bi-box-seam"></i> Encomiendas
+        </a>
         <hr class="text-white opacity-25 my-3 mx-3">
         <a class="nav-link text-danger" href="LogoutServlet">
             <i class="bi bi-box-arrow-right"></i> Salir

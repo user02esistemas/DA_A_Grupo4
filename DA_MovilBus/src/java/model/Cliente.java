@@ -1,13 +1,8 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 import java.sql.Date;
 
 public class Cliente {
-
     private int idCliente;
     private String dni;
     private String nombre;
@@ -15,16 +10,14 @@ public class Cliente {
     private String telefono;
     private String email;
     private Date fechaRegistro;
+    private int idUsuario; // Relación con la tabla Usuarios
+    
+    // Objeto opcional si quieres tener los datos del usuario directamente mapeados:
+    private Usuario usuario; 
 
+    public Cliente() {}
 
-    public Cliente() {
-    }
-
-
-    public Cliente(int idCliente, String dni, String nombre,
-                   String apellido, String telefono,
-                   String email, Date fechaRegistro) {
-
+    public Cliente(int idCliente, String dni, String nombre, String apellido, String telefono, String email, Date fechaRegistro, int idUsuario, Usuario usuario) {
         this.idCliente = idCliente;
         this.dni = dni;
         this.nombre = nombre;
@@ -32,8 +25,10 @@ public class Cliente {
         this.telefono = telefono;
         this.email = email;
         this.fechaRegistro = fechaRegistro;
+        this.idUsuario = idUsuario;
+        this.usuario = usuario;
     }
-
+    
 
     public int getIdCliente() {
         return idCliente;
@@ -43,7 +38,6 @@ public class Cliente {
         this.idCliente = idCliente;
     }
 
-
     public String getDni() {
         return dni;
     }
@@ -51,7 +45,6 @@ public class Cliente {
     public void setDni(String dni) {
         this.dni = dni;
     }
-
 
     public String getNombre() {
         return nombre;
@@ -61,7 +54,6 @@ public class Cliente {
         this.nombre = nombre;
     }
 
-
     public String getApellido() {
         return apellido;
     }
@@ -69,7 +61,6 @@ public class Cliente {
     public void setApellido(String apellido) {
         this.apellido = apellido;
     }
-
 
     public String getTelefono() {
         return telefono;
@@ -79,7 +70,6 @@ public class Cliente {
         this.telefono = telefono;
     }
 
-
     public String getEmail() {
         return email;
     }
@@ -88,7 +78,6 @@ public class Cliente {
         this.email = email;
     }
 
-
     public Date getFechaRegistro() {
         return fechaRegistro;
     }
@@ -96,4 +85,22 @@ public class Cliente {
     public void setFechaRegistro(Date fechaRegistro) {
         this.fechaRegistro = fechaRegistro;
     }
+
+    public int getIdUsuario() {
+        return idUsuario;
+    }
+
+    public void setIdUsuario(int idUsuario) {
+        this.idUsuario = idUsuario;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    
 }

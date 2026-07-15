@@ -50,8 +50,10 @@
                     <li class="nav-item"><a class="nav-link active" href="index.jsp">Inicio</a></li>
                     <% if (!nombreCliente.isEmpty()) { %>
                         <li class="nav-item"><a class="nav-link" href="VentaServlet?accion=historial"><i class="bi bi-clock-history me-1"></i>Mis Viajes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="EncomiendaServlet?accion=historialEncomienda"><i class="bi bi-box-seam me-1"></i>Mis Envíos</a></li>
                     <% } %>
                     <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#encomiendas"><i class="bi bi-box-seam me-1"></i>Encomiendas</a></li>
                     <li class="nav-item"><a class="nav-link" href="#destinos">Destinos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
                 </ul>
@@ -72,6 +74,54 @@
                             </a>
                         </div>
                     <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Alertas globales -->
+    <% if ("success".equals(request.getParameter("registro"))) { %>
+    <div class="container mt-3">
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill fs-4"></i>
+                <div>
+                    <strong>¡Bienvenido a MovilBus!</strong><br>
+                    <span>Tu cuenta ha sido creada exitosamente. Ahora puedes comprar pasajes online.</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+    <% } %>
+    <% if ("success".equals(request.getParameter("cita"))) { %>
+    <div class="container mt-3">
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill fs-4" style="color: var(--mvb-orange);"></i>
+                <div>
+                    <strong>¡Cita agendada exitosamente!</strong><br>
+                    <span>Nos pondremos en contacto contigo para confirmar el envío de tu encomienda.</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+    <% } %>
+    <% if ("error".equals(request.getParameter("cita"))) { %>
+    <div class="container mt-3">
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                <div>
+                    <strong>Error al agendar la cita.</strong><br>
+                    <span>Verifica tus datos e inténtalo nuevamente.</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+    <% } %>
                 </div>
             </div>
         </div>
@@ -493,6 +543,7 @@
                                 <th>Servicio</th>
                                 <th class="text-center">Precio</th>
                                 <th class="text-center">Estado</th>
+                                <th>Vendido por</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -518,6 +569,11 @@
                                     <td class="text-center">
                                         <span class="badge ${v.estadoPasaje == 'ACTIVO' ? 'bg-success' : 'bg-secondary'}">${v.estadoPasaje}</span>
                                     </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person-badge me-1"></i>${v.vendedor != null ? v.vendedor : 'Online (Cliente Web)'}
+                                        </small>
+                                    </td>
                                 </tr>
                             </c:forEach>
                         </tbody>
@@ -528,6 +584,152 @@
                     <a href="#buscador" class="btn btn-ingresar rounded-pill btn-sm">
                         <i class="bi bi-ticket-perforated me-1"></i> Comprar nuevo pasaje
                     </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    </c:if>
+
+    <!-- ============================================================
+         MIS ENCOMIENDAS Y CITAS DEL CLIENTE
+         (visible solo cuando CLIENTE_WEB está logueado y hay datos)
+         ============================================================ -->
+    <c:if test="${not empty listaEncomiendasCliente or not empty listaCitasCliente}">
+    <section class="py-4" id="mis-envios">
+        <div class="container">
+            <div class="card shadow-sm border-0 rounded-4 p-4 animate-up">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-box-seam fs-4 text-warning me-2"></i>
+                    <h5 class="fw-bold mb-0">Mis Envíos y Citas</h5>
+                    <span class="ms-auto badge bg-warning text-dark rounded-pill">
+                        ${not empty listaEncomiendasCliente ? listaEncomiendasCliente.size() : 0} encomienda(s)
+                    </span>
+                </div>
+
+                <!-- Stats rápidos -->
+                <c:set var="totalEncCliente" value="0"/>
+                <c:set var="totalCitasCliente" value="0"/>
+                <c:set var="encEntregadas" value="0"/>
+                <c:set var="citasPendientes" value="0"/>
+                <c:forEach var="e" items="${listaEncomiendasCliente}">
+                    <c:set var="totalEncCliente" value="${totalEncCliente + 1}"/>
+                    <c:if test="${e.estado == 'ENTREGADO'}"><c:set var="encEntregadas" value="${encEntregadas + 1}"/></c:if>
+                </c:forEach>
+                <c:forEach var="c" items="${listaCitasCliente}">
+                    <c:set var="totalCitasCliente" value="${totalCitasCliente + 1}"/>
+                    <c:if test="${c.estado == 'PENDIENTE'}"><c:set var="citasPendientes" value="${citasPendientes + 1}"/></c:if>
+                </c:forEach>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <div class="bg-light rounded-3 p-3 text-center">
+                            <small class="text-muted">Total Encomiendas</small>
+                            <div class="fw-bold fs-5" style="color: var(--mvb-orange);">${totalEncCliente}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-light rounded-3 p-3 text-center">
+                            <small class="text-muted">Entregadas</small>
+                            <div class="fw-bold fs-5 text-success">${encEntregadas}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-light rounded-3 p-3 text-center">
+                            <small class="text-muted">Citas Pendientes</small>
+                            <div class="fw-bold fs-5 text-warning">${citasPendientes}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab de Encomiendas -->
+                <c:if test="${not empty listaEncomiendasCliente}">
+                <h6 class="fw-bold mt-3 mb-2"><i class="bi bi-box-seam me-1"></i>Mis Encomiendas</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Fecha</th>
+                                <th>Descripción</th>
+                                <th>Peso</th>
+                                <th>Ruta</th>
+                                <th class="text-center">Costo</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="e" items="${listaEncomiendasCliente}">
+                                <tr>
+                                    <td><span class="badge bg-dark">#${e.idEncomienda}</span></td>
+                                    <td><small>${e.fechaEnvio}</small></td>
+                                    <td><small>${e.descripcion}</small></td>
+                                    <td><span class="badge bg-secondary">${e.pesoKg} kg</span></td>
+                                    <td>
+                                        <small>
+                                            <i class="bi bi-geo-alt-fill text-success me-1"></i>${e.origen}
+                                            <i class="bi bi-arrow-right mx-1"></i>
+                                            <i class="bi bi-geo-alt-fill text-danger me-1"></i>${e.destino}
+                                        </small>
+                                    </td>
+                                    <td class="text-center fw-bold" style="color: var(--mvb-orange);">S/. ${e.precioEnvio}</td>
+                                    <td class="text-center">
+                                        <span class="badge ${e.estado == 'ENTREGADO' ? 'bg-success' : e.estado == 'EN VIAJE' ? 'bg-primary' : 'bg-secondary'}">
+                                            ${e.estado}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+                </div>
+                <hr>
+                </c:if>
+
+                <!-- Tab de Citas -->
+                <c:if test="${not empty listaCitasCliente}">
+                <h6 class="fw-bold mt-2 mb-2"><i class="bi bi-calendar-check me-1"></i>Mis Citas Agendadas</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Registro</th>
+                                <th>Descripción</th>
+                                <th>Ruta</th>
+                                <th>Fecha Preferida</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="c" items="${listaCitasCliente}">
+                                <tr>
+                                    <td><span class="badge bg-dark">#${c.idCita}</span></td>
+                                    <td><small>${c.fechaRegistro}</small></td>
+                                    <td><small>${c.descripcion}</small></td>
+                                    <td>
+                                        <small>
+                                            <i class="bi bi-geo-alt-fill text-success me-1"></i>${c.nombreOrigen}
+                                            <i class="bi bi-arrow-right mx-1"></i>
+                                            <i class="bi bi-geo-alt-fill text-danger me-1"></i>${c.nombreDestino}
+                                        </small>
+                                    </td>
+                                    <td><small>${c.fechaPreferida} - ${c.horaPreferida}</small></td>
+                                    <td class="text-center">
+                                        <span class="badge ${c.estado == 'CONFIRMADA' ? 'bg-success' : c.estado == 'PENDIENTE' ? 'bg-warning text-dark' : 'bg-secondary'}">
+                                            ${c.estado}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+                </div>
+                </c:if>
+                
+                <div class="mt-3 text-center">
+                    <button class="btn btn-ingresar rounded-pill btn-sm" data-bs-toggle="modal" data-bs-target="#modalCitaEncomienda">
+                        <i class="bi bi-calendar-plus me-1"></i> Agendar nueva cita
+                    </button>
                 </div>
             </div>
         </div>
@@ -741,6 +943,119 @@
     </section>
 
     <!-- ============================================================
+         ENCOMIENDAS SECTION
+         ============================================================ -->
+    <section class="py-5" id="encomiendas" style="background: linear-gradient(135deg, #FFF8E1 0%, #FFFFFF 50%, #FFF3E0 100%);">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="hero-badge animate-up" style="background: rgba(255,152,0,.12); color: #E65100;">
+                        <i class="bi bi-box-seam"></i>
+                        Envíos seguros y rápidos
+                    </div>
+                    <h2 class="section-title text-start mt-3" style="font-size: 2rem;">
+                        Envía tus <span class="highlight">encomiendas</span><br>
+                        con MovilBus
+                    </h2>
+                    <p class="text-muted mb-4" style="font-size: 1.05rem; line-height: 1.7;">
+                        Aprovecha nuestros viajes interprovinciales para enviar paquetes, 
+                        documentos y mercancía de forma rápida, segura y al mejor precio. 
+                        Tu encomienda viaja en el mismo bus, con la misma puntualidad 
+                        y cuidado que nuestros pasajeros.
+                    </p>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 shadow-sm">
+                                <div class="feature-icon orange" style="width: 44px; height: 44px; font-size: 1.2rem; flex-shrink: 0;">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 small">Seguridad Garantizada</h6>
+                                    <p class="mb-0 text-muted" style="font-size: .82rem;">Tu paquete viaja protegido y monitoreado.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 shadow-sm">
+                                <div class="feature-icon yellow" style="width: 44px; height: 44px; font-size: 1.2rem; flex-shrink: 0;">
+                                    <i class="bi bi-clock"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 small">Entrega Rápida</h6>
+                                    <p class="mb-0 text-muted" style="font-size: .82rem;">Llega el mismo día del viaje programado.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 shadow-sm">
+                                <div class="feature-icon dark" style="width: 44px; height: 44px; font-size: 1.2rem; flex-shrink: 0;">
+                                    <i class="bi bi-currency-dollar"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 small">Precios Justos</h6>
+                                    <p class="mb-0 text-muted" style="font-size: .82rem;">Tarifas económicas según peso y destino.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-start gap-3 p-3 bg-white rounded-3 shadow-sm">
+                                <div class="feature-icon orange" style="width: 44px; height: 44px; font-size: 1.2rem; flex-shrink: 0;">
+                                    <i class="bi bi-geo-alt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 small">Multi-destinos</h6>
+                                    <p class="mb-0 text-muted" style="font-size: .82rem;">Cobertura en todas nuestras rutas activas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3">
+                        <button class="btn btn-ingresar rounded-pill px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalCitaEncomienda">
+                            <i class="bi bi-calendar-check me-2"></i> Agendar Cita
+                        </button>
+                        <% if (!nombreCliente.isEmpty()) { %>
+                            <a href="<%= "CLIENTE_WEB".equalsIgnoreCase(rolCliente) ? "#" : "EncomiendaServlet?accion=listar" %>" 
+                               class="btn btn-outline-secondary rounded-pill px-4 py-2"
+                               <%= "CLIENTE_WEB".equalsIgnoreCase(rolCliente) ? "onclick=\"alert('Para más información, visita nuestra agencia más cercana.');\"" : "" %>>
+                                <i class="bi bi-box-seam me-2"></i> Ver Encomiendas
+                            </a>
+                        <% } %>
+                    </div>
+                    <p class="text-muted small mt-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Agenda una cita y te contactaremos para coordinar el recojo y envío de tu paquete.
+                        También puedes visitar cualquiera de nuestras agencias.
+                    </p>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block">
+                    <div class="text-center">
+                        <i class="bi bi-box-seam" style="font-size: 14rem; color: rgba(255,152,0,.08);"></i>
+                        <div class="card shadow-sm border-0 rounded-4 p-4 mx-auto" style="max-width: 320px; margin-top: -60px;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-star-fill me-1"></i>Más usado</span>
+                                <small class="text-muted">Desde S/ 15</small>
+                            </div>
+                            <h6 class="fw-bold">Encomienda Express</h6>
+                            <p class="small text-muted mb-0">Hasta 5 kg · Documentos y paquetes pequeños · Entrega en destino + recojo en agencia.</p>
+                            <hr>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Peso máximo</span>
+                                <span class="fw-bold">50 kg</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mt-1">
+                                <span class="text-muted">Tiempo estimado</span>
+                                <span class="fw-bold">Según ruta</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
          FOOTER (con Intranet solo aquí)
          ============================================================ -->
     <footer class="footer-movilbus" id="contacto">
@@ -770,6 +1085,7 @@
                     <div class="d-flex flex-column">
                         <a href="index.jsp"><i class="bi bi-chevron-right small"></i> Inicio</a>
                         <a href="#servicios"><i class="bi bi-chevron-right small"></i> Servicios</a>
+                        <a href="#encomiendas"><i class="bi bi-chevron-right small"></i> Encomiendas</a>
                         <a href="#destinos"><i class="bi bi-chevron-right small"></i> Destinos</a>
                         <a href="#buscador"><i class="bi bi-chevron-right small"></i> Comprar Pasaje</a>
                     </div>
@@ -818,6 +1134,125 @@
     </footer>
 
     <!-- ============================================================
+         MODAL CITA ENCOMIENDA
+         ============================================================ -->
+    <div class="modal fade modal-movilbus" id="modalCitaEncomienda" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
+                <div class="modal-header text-center" style="background: linear-gradient(135deg, #FF6B00, #FF8F00); color: white; padding: 1.2rem 1.8rem;">
+                    <div class="w-100">
+                        <i class="bi bi-calendar-check fs-1 mb-2 d-block"></i>
+                        <h5 class="modal-title fw-bold">Agendar Cita para Encomienda</h5>
+                        <p class="mb-0 small opacity-75">Programa el envío de tu paquete y te contactaremos</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form action="EncomiendaServlet" method="POST" id="formCitaEncomienda">
+                        <input type="hidden" name="accion" value="agendarCita">
+
+                        <!-- Datos del cliente -->
+                        <div class="border rounded-3 p-3 mb-4 bg-light">
+                            <h6 class="fw-bold mb-3" style="color: var(--mvb-orange);">
+                                <i class="bi bi-person me-1"></i>Tus Datos
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small">DNI <span class="text-danger">*</span></label>
+                                    <input type="text" name="dni" class="form-control" maxlength="8" pattern="\d{8}" placeholder="12345678" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Nombre Completo <span class="text-danger">*</span></label>
+                                    <input type="text" name="nombre" class="form-control" placeholder="Nombres y Apellidos" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Teléfono</label>
+                                    <input type="tel" name="telefono" class="form-control" placeholder="999 888 777">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Origen y Destino -->
+                        <div class="border rounded-3 p-3 mb-4 bg-light">
+                            <h6 class="fw-bold mb-3" style="color: var(--mvb-orange);">
+                                <i class="bi bi-geo-alt me-1"></i>Ruta del Envío
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Origen <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="idOrigen" required>
+                                        <option value="">¿De dónde se envía?</option>
+                                        <c:forEach var="c" items="${ciudadesIndex}">
+                                            <option value="${c.idCiudad}">${c.nombre}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Destino <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="idDestino" required>
+                                        <option value="">¿A dónde se envía?</option>
+                                        <c:forEach var="c" items="${ciudadesIndex}">
+                                            <option value="${c.idCiudad}">${c.nombre}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalles del paquete -->
+                        <div class="border rounded-3 p-3 mb-4 bg-light">
+                            <h6 class="fw-bold mb-3" style="color: var(--mvb-orange);">
+                                <i class="bi bi-box me-1"></i>Detalles del Paquete
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label small">Descripción <span class="text-danger">*</span></label>
+                                    <input type="text" name="descripcion" class="form-control" placeholder="Ej: Documentos, ropa, repuestos..." required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Peso aprox. (kg) <span class="text-danger">*</span></label>
+                                    <input type="number" name="pesoEstimado" class="form-control" step="0.1" min="0.1" value="1.0" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha y Hora -->
+                        <div class="border rounded-3 p-3 mb-4 bg-light">
+                            <h6 class="fw-bold mb-3" style="color: var(--mvb-orange);">
+                                <i class="bi bi-clock me-1"></i>Preferencia de Recojo
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Fecha Preferida <span class="text-danger">*</span></label>
+                                    <input type="date" name="fechaPreferida" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Hora Preferida <span class="text-danger">*</span></label>
+                                    <input type="time" name="horaPreferida" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="mb-4">
+                            <label class="form-label small">Observaciones (opcional)</label>
+                            <textarea name="observaciones" class="form-control" rows="2" placeholder="Algún detalle adicional..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-ingresar w-100 py-2 fw-bold rounded-pill">
+                            <i class="bi bi-check-circle me-2"></i> Agendar Cita
+                        </button>
+                        <p class="text-center text-muted small mt-2 mb-0">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Te contactaremos para confirmar el recojo y el costo del envío.
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
          MODAL LOGIN CLIENTE
          ============================================================ -->
     <div class="modal fade modal-movilbus" id="modalLoginCliente" tabindex="-1" aria-hidden="true">
@@ -851,7 +1286,7 @@
                             <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
                         </button>
                         <p class="text-center text-muted small mb-0 mt-3">
-                            ¿No tienes cuenta? <a href="#" class="text-decoration-none fw-semibold" style="color: var(--mvb-orange);">Regístrate aquí</a>
+                            ¿No tienes cuenta? <a href="registro-cliente.jsp" class="text-decoration-none fw-semibold" style="color: var(--mvb-orange);">Regístrate aquí</a>
                         </p>
                     </form>
                 </div>

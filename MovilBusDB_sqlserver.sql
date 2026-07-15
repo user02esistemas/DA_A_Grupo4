@@ -197,7 +197,9 @@ INSERT INTO Roles (nombre_rol) VALUES
 -- Usuarios Iniciales
 INSERT INTO Usuarios (username, password, nombre, apellido, id_rol) VALUES 
 ('admin', '123456', 'Juan', 'Perez', 1),
-('vendedor1', '123456', 'Maria', 'Gomez', 2);
+('vendedor1', '123456', 'Maria', 'Gomez', 2)
+('cliente', '123456', 'Mariana', 'lucha', 3)
+;
 
 -- Ciudades de Origen y Destino
 INSERT INTO Ciudades (nombre, departamento) VALUES 

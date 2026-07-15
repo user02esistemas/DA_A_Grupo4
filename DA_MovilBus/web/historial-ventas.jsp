@@ -71,6 +71,26 @@
                     </div>
                 </nav>
 
+                <!-- Alerts -->
+                <c:if test="${param.status == 'success'}">
+                    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                        <i class="bi bi-check-circle me-2"></i> <strong>¡Operación exitosa!</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </c:if>
+                <c:if test="${param.status == 'anulado'}">
+                    <div class="alert alert-warning alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i> <strong>Pasaje anulado - Reembolso procesado.</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </c:if>
+                <c:if test="${param.status == 'error'}">
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i> <strong>Error al procesar la operación.</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </c:if>
+
                 <!-- Page Header -->
                 <div class="d-flex justify-content-between align-items-start mb-4">
                     <div>
@@ -206,6 +226,7 @@
                                         <th class="text-center">Precio</th>
                                         <th class="text-center">Estado</th>
                                         <th>Vendedor</th>
+                                        <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -260,11 +281,23 @@
                                                     <i class="bi bi-person-badge me-1"></i>${v.vendedor != null ? v.vendedor : 'Cliente Web'}
                                                 </small>
                                             </td>
+                                            <td class="text-center">
+                                                <c:if test="${v.estadoPasaje == 'ACTIVO'}">
+                                                    <button type="button" class="btn btn-outline-warning btn-sm rounded-pill" 
+                                                            onclick="confirmarAnulacion(${v.idPasaje}, '${v.dniCliente}', '${v.nombreCliente} ${v.apellidoCliente}')"
+                                                            title="Solicitar Reembolso / Anular Pasaje">
+                                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reembolsar
+                                                    </button>
+                                                </c:if>
+                                                <c:if test="${v.estadoPasaje != 'ACTIVO'}">
+                                                    <span class="text-muted small">—</span>
+                                                </c:if>
+                                            </td>
                                         </tr>
                                     </c:forEach>
                                     <c:if test="${empty listaVentas}">
                                         <tr>
-                                            <td colspan="11">
+                                            <td colspan="12">
                                                 <div class="empty-state">
                                                     <i class="bi bi-ticket text-muted"></i>
                                                     <p class="mb-0">No se han realizado ventas aún.</p>
@@ -313,6 +346,26 @@
         document.getElementById('filtroBusqueda').value = '';
         document.getElementById('filtroServicio').value = '';
         filtrarTabla();
+    }
+
+    function confirmarAnulacion(idPasaje, dni, nombre) {
+        if (confirm('¿Estás seguro de anular el pasaje #' + idPasaje + ' de ' + nombre + ' (DNI: ' + dni + ')?\n\nEsta acción simulará un REEMBOLSO y cambiará el estado del pasaje a ANULADO.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'VentaServlet';
+            const inputAccion = document.createElement('input');
+            inputAccion.type = 'hidden';
+            inputAccion.name = 'accion';
+            inputAccion.value = 'anularPasaje';
+            const inputId = document.createElement('input');
+            inputId.type = 'hidden';
+            inputId.name = 'idPasaje';
+            inputId.value = idPasaje;
+            form.appendChild(inputAccion);
+            form.appendChild(inputId);
+            document.body.appendChild(form);
+            form.submit();
+        }
     }
     </script>
 </body>
