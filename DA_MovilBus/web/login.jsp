@@ -1,8 +1,4 @@
-<%-- 
-    Document   : login
-    Página de inicio de sesión para el personal de MovilBus (intranet)
-    Los clientes web deben usar el modal en index.jsp
---%>
+<%-- Pagina de inicio de sesion para el personal de MovilBus (intranet) --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="model.Usuario"%>
 <%

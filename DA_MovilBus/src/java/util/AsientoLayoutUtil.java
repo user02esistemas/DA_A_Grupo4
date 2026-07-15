@@ -3,12 +3,7 @@ package util;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Genera plantillas de asientos según servicio, capacidad y pisos de MovilBus.
- * Patrón 3 columnas (2 izq + 1 der solitaria con recargo):
- *   Fila par:    1  2 | 3
- *   Fila impar:  5  4 | 6
- */
+/** Genera plantillas de asientos segun servicio, capacidad y pisos del bus. */
 public class AsientoLayoutUtil {
 
     public static class PlantillaAsiento {

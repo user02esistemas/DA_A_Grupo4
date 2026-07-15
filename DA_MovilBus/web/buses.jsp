@@ -1,7 +1,4 @@
-<%-- 
-    Document   : buses
-    Módulo de gestión de flota de buses MovilBus
---%>
+<%-- Modulo de gestion de flota de buses MovilBus --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="dao.BusDAO, model.Usuario"%>
@@ -10,7 +7,7 @@
     request.setAttribute("listaBuses", busDAO.listarBuses());
 %>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo ADMINISTRADOR puede gestionar buses
+    // Control de acceso: solo ADMINISTRADOR puede gestionar buses
     Usuario userBus = (Usuario) session.getAttribute("usuarioSesion");
     if (userBus == null) {
         response.sendRedirect("login.jsp");

@@ -1,12 +1,9 @@
-<%-- 
-    Document   : historial-ventas
-    Historial completo de ventas de pasajes realizadas
---%>
+<%-- Historial completo de ventas de pasajes realizadas --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="model.Usuario"%>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo ADMINISTRADOR y VENDEDOR pueden ver historial
+    // Control de acceso: solo ADMINISTRADOR y VENDEDOR pueden ver historial
     Usuario userH = (Usuario) session.getAttribute("usuarioSesion");
     if (userH == null || (!"ADMINISTRADOR".equalsIgnoreCase(userH.getRol()) && !"VENDEDOR".equalsIgnoreCase(userH.getRol()))) {
         response.sendRedirect("ventas.jsp");

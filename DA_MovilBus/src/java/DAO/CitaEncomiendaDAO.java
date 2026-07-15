@@ -97,39 +97,36 @@ public class CitaEncomiendaDAO {
                      "INNER JOIN Cliente cli ON c.id_cliente = cli.id_cliente " +
                      "INNER JOIN Ciudades o ON c.id_origen = o.id_ciudad " +
                      "INNER JOIN Ciudades d ON c.id_destino = d.id_ciudad " +
-                     + whereExtra + " " +
-                     "ORDER BY c.fecha_registro DESC";
-        List<CitaEncomienda> lista = new ArrayList<>();
-        String sql = "SELECT c.id_cita, c.descripcion, c.peso_estimado, c.fecha_preferida, c.hora_preferida, " +
-                     "c.estado, c.fecha_registro, c.observaciones, " +
-                     "cli.id_cliente, cli.dni, cli.nombre AS nombre_cliente, cli.apellido, cli.telefono, " +
-                     "o.nombre AS origen, d.nombre AS destino " +
-                     "FROM Cita_Encomienda c " +
-                     "INNER JOIN Cliente cli ON c.id_cliente = cli.id_cliente " +
-                     "INNER JOIN Ciudades o ON c.id_origen = o.id_ciudad " +
-                     "INNER JOIN Ciudades d ON c.id_destino = d.id_ciudad " +
+                     (whereExtra.isEmpty() ? "" : whereExtra + " ") +
                      "ORDER BY c.fecha_registro DESC";
 
         try (Connection con = ConexionBD.getConexion();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                CitaEncomienda c = new CitaEncomienda();
-                c.setIdCita(rs.getInt("id_cita"));
-                c.setIdCliente(rs.getInt("id_cliente"));
-                c.setDescripcion(rs.getString("descripcion"));
-                c.setPesoEstimado(rs.getDouble("peso_estimado"));
-                c.setFechaPreferida(rs.getString("fecha_preferida"));
-                c.setHoraPreferida(rs.getString("hora_preferida"));
-                c.setEstado(rs.getString("estado"));
-                c.setFechaRegistro(rs.getTimestamp("fecha_registro"));
-                c.setObservaciones(rs.getString("observaciones"));
-                c.setNombreCliente(rs.getString("nombre_cliente") + " " + rs.getString("apellido"));
-                c.setDniCliente(rs.getString("dni"));
-                c.setTelefonoCliente(rs.getString("telefono"));
-                c.setNombreOrigen(rs.getString("origen"));
-                c.setNombreDestino(rs.getString("destino"));
-                lista.add(c);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            // Invocar el callback para setear parámetros si existe
+            if (paramSetter != null) {
+                paramSetter.set(ps);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    CitaEncomienda c = new CitaEncomienda();
+                    c.setIdCita(rs.getInt("id_cita"));
+                    c.setIdCliente(rs.getInt("id_cliente"));
+                    c.setDescripcion(rs.getString("descripcion"));
+                    c.setPesoEstimado(rs.getDouble("peso_estimado"));
+                    c.setFechaPreferida(rs.getString("fecha_preferida"));
+                    c.setHoraPreferida(rs.getString("hora_preferida"));
+                    c.setEstado(rs.getString("estado"));
+                    c.setFechaRegistro(rs.getTimestamp("fecha_registro"));
+                    c.setObservaciones(rs.getString("observaciones"));
+                    c.setNombreCliente(rs.getString("nombre_cliente") + " " + rs.getString("apellido"));
+                    c.setDniCliente(rs.getString("dni"));
+                    c.setTelefonoCliente(rs.getString("telefono"));
+                    c.setNombreOrigen(rs.getString("origen"));
+                    c.setNombreDestino(rs.getString("destino"));
+                    lista.add(c);
+                }
             }
         } catch (SQLException e) {
             System.err.println("Error al listar citas: " + e.getMessage());
@@ -153,10 +150,53 @@ public class CitaEncomiendaDAO {
         }
     }
 
-    // =================================================================
-    //  MÉTODOS AUXILIARES
-    // =================================================================
+    /**
+     * Obtiene una cita por su ID, incluyendo datos del cliente.
+     */
+    public CitaEncomienda obtenerCitaPorId(int idCita) {
+        String sql = "SELECT c.id_cita, c.id_cliente, c.id_origen, c.id_destino, c.descripcion, " +
+                     "c.peso_estimado, c.fecha_preferida, c.hora_preferida, c.estado, c.fecha_registro, c.observaciones, " +
+                     "cli.dni, cli.nombre AS nombre_cliente, cli.apellido, cli.telefono, " +
+                     "o.nombre AS origen, d.nombre AS destino " +
+                     "FROM Cita_Encomienda c " +
+                     "INNER JOIN Cliente cli ON c.id_cliente = cli.id_cliente " +
+                     "INNER JOIN Ciudades o ON c.id_origen = o.id_ciudad " +
+                     "INNER JOIN Ciudades d ON c.id_destino = d.id_ciudad " +
+                     "WHERE c.id_cita = ?";
 
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idCita);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    CitaEncomienda c = new CitaEncomienda();
+                    c.setIdCita(rs.getInt("id_cita"));
+                    c.setIdCliente(rs.getInt("id_cliente"));
+                    c.setIdOrigen(rs.getInt("id_origen"));
+                    c.setIdDestino(rs.getInt("id_destino"));
+                    c.setDescripcion(rs.getString("descripcion"));
+                    c.setPesoEstimado(rs.getDouble("peso_estimado"));
+                    c.setFechaPreferida(rs.getString("fecha_preferida"));
+                    c.setHoraPreferida(rs.getString("hora_preferida"));
+                    c.setEstado(rs.getString("estado"));
+                    c.setFechaRegistro(rs.getTimestamp("fecha_registro"));
+                    c.setObservaciones(rs.getString("observaciones"));
+                    c.setDniCliente(rs.getString("dni"));
+                    c.setNombreCliente(rs.getString("nombre_cliente") + " " + rs.getString("apellido"));
+                    c.setTelefonoCliente(rs.getString("telefono"));
+                    c.setNombreOrigen(rs.getString("origen"));
+                    c.setNombreDestino(rs.getString("destino"));
+                    return c;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener cita por ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    // Metodos auxiliares
+    
     private int buscarOCrearCliente(Connection con, String dni, String nombreCompleto, String telefono) throws SQLException {
         String sqlBuscar = "SELECT id_cliente FROM Cliente WHERE dni = ?";
         try (PreparedStatement ps = con.prepareStatement(sqlBuscar)) {

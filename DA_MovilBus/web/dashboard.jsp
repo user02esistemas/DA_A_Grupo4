@@ -1,11 +1,8 @@
-<%-- 
-    Document   : dashboard
-    Panel principal de MovilBus con acceso a todos los módulos
---%>
+<%-- Panel principal de MovilBus con acceso a todos los modulos segun el rol del usuario --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="model.Usuario"%>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo autenticados (ADMIN o VENDEDOR)
+    // Control de acceso: solo ADMIN o VENDEDOR
     Usuario user = (Usuario) session.getAttribute("usuarioSesion");
     if (user == null) {
         response.sendRedirect("login.jsp");

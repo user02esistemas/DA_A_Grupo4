@@ -1,7 +1,4 @@
-<%-- 
-    Document   : conductores
-    CRUD completo para gestionar conductores de MovilBus
---%>
+<%-- CRUD completo para gestionar conductores de MovilBus --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="dao.ConductorDAO, model.Conductor, model.Usuario, java.util.List"%>
@@ -10,7 +7,7 @@
     request.setAttribute("listaConductores", condDAO.listarConductores());
 %>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo ADMINISTRADOR puede gestionar conductores
+    // Control de acceso: solo ADMINISTRADOR puede gestionar conductores
     Usuario userCond = (Usuario) session.getAttribute("usuarioSesion");
     if (userCond == null) {
         response.sendRedirect("login.jsp");

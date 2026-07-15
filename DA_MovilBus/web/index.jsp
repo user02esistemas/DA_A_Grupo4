@@ -1,8 +1,4 @@
-<%-- 
-    Document   : index
-    Landing Page Principal de MovilBus - Venta de Pasajes
-    Colores corporativos: Naranja (#FF6B00), Amarillo (#FFC107), Blanco
---%>
+<%-- Landing page principal de MovilBus, acceso publico para busqueda y compra de pasajes --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="dao.CiudadDAO, model.Ciudad, model.Usuario, java.util.List"%>
@@ -884,7 +880,7 @@
                 <!-- Chiclayo (ID 1): Al hacer clic va a ventas con origen preseleccionado -->
                 <div class="col-md-4 col-lg-3 col-6">
                     <div class="card destino-card" onclick="buscarDestino(1)" style="cursor:pointer;">
-                        <div class="destino-img">
+                        <div class="destino-img chiclayo-bg">
                             <i class="bi bi-geo-alt"></i>
                         </div>
                         <div class="card-body">
@@ -897,7 +893,7 @@
                 <!-- Lima (ID 2) -->
                 <div class="col-md-4 col-lg-3 col-6">
                     <div class="card destino-card" onclick="buscarDestino(2)" style="cursor:pointer;">
-                        <div class="destino-img" style="background: linear-gradient(135deg, #FF8C00, #FFB300);">
+                        <div class="destino-img lima-bg">
                             <i class="bi bi-building"></i>
                         </div>
                         <div class="card-body">
@@ -910,7 +906,7 @@
                 <!-- Trujillo (ID 3) -->
                 <div class="col-md-4 col-lg-3 col-6">
                     <div class="card destino-card" onclick="buscarDestino(3)" style="cursor:pointer;">
-                        <div class="destino-img" style="background: linear-gradient(135deg, #FF6B00, #FF8C00);">
+                        <div class="destino-img trujillo-bg">
                             <i class="bi bi-compass"></i>
                         </div>
                         <div class="card-body">
@@ -923,7 +919,7 @@
                 <!-- Piura (ID 4) -->
                 <div class="col-md-4 col-lg-3 col-6">
                     <div class="card destino-card" onclick="buscarDestino(4)" style="cursor:pointer;">
-                        <div class="destino-img" style="background: linear-gradient(135deg, #FFB300, #FFC107);">
+                        <div class="destino-img piura-bg">
                             <i class="bi bi-sun"></i>
                         </div>
                         <div class="card-body">

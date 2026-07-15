@@ -1,7 +1,4 @@
-<%-- 
-    Document   : pasaje-confirmado
-    Pantalla de confirmación de compra - Muestra datos del pasaje y opción de descarga
---%>
+<%-- Pantalla de confirmacion de compra - Muestra datos del pasaje y opcion de descarga --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="dao.ViajeDAO, java.util.Map, java.util.List, model.Usuario"%>

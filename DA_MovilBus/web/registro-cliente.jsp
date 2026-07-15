@@ -1,8 +1,4 @@
-<%-- 
-    Document   : registro-cliente
-    Página de registro de nuevo cliente con su cuenta de usuario CLIENTE_WEB
-    Estilo corporativo MovilBus
---%>
+<%-- Pagina de registro de nuevo cliente con su cuenta de usuario CLIENTE_WEB --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>

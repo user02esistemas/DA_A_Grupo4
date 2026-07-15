@@ -1,13 +1,9 @@
-<%-- 
-    Document   : encomiendas
-    Módulo de Encomiendas - Registro y seguimiento de envíos de paquetes
-    Solo accesible para ADMINISTRADOR y VENDEDOR
---%>
+<%-- Modulo de Encomiendas - Registro y seguimiento de envios de paquetes --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="java.util.List, java.util.Map, dao.CiudadDAO, model.Ciudad, model.Usuario"%>
 <%
-    // 🔒 CONTROL DE ACCESO
+    // Control de acceso
     Usuario user = (Usuario) session.getAttribute("usuarioSesion");
     if (user == null) {
         response.sendRedirect("login.jsp");
@@ -72,6 +68,80 @@
         .table-enc > :not(caption) > * > * {
             vertical-align: middle;
             font-size: .875rem;
+        }
+        .btn-registrar-enc {
+            background: linear-gradient(135deg, #FF6B00, #FF8C00, #FFB300);
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: .7rem 2rem;
+            border-radius: 50px;
+            font-size: .95rem;
+            transition: all .3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(255,107,0,.3);
+            letter-spacing: .3px;
+        }
+        .btn-registrar-enc:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,107,0,.45);
+        }
+        .btn-registrar-enc:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255,107,0,.3);
+        }
+        .btn-registrar-enc i {
+            font-size: 1.1rem;
+            transition: transform .3s ease;
+        }
+        .btn-registrar-enc:hover i {
+            transform: scale(1.2) rotate(-5deg);
+        }
+        .btn-cancelar-enc {
+            background: transparent;
+            border: 2px solid #e0e0e0;
+            color: #6B7280;
+            font-weight: 600;
+            padding: .7rem 1.8rem;
+            border-radius: 50px;
+            font-size: .9rem;
+            transition: all .3s ease;
+            letter-spacing: .3px;
+        }
+        .btn-cancelar-enc:hover {
+            border-color: #dc3545;
+            color: #dc3545;
+            background: rgba(220,53,69,.05);
+            transform: translateY(-2px);
+        }
+        .btn-empty-enc {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #FF6B00, #FF8C00, #FFB300);
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: .7rem 1.8rem;
+            border-radius: 50px;
+            font-size: .9rem;
+            transition: all .3s ease;
+            box-shadow: 0 4px 15px rgba(255,107,0,.3);
+            cursor: pointer;
+            letter-spacing: .3px;
+            margin-top: .75rem;
+        }
+        .btn-empty-enc:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(255,107,0,.5);
+        }
+        .btn-empty-enc i {
+            font-size: 1.2rem;
+            transition: transform .3s ease;
+        }
+        .btn-empty-enc:hover i {
+            transform: scale(1.2) rotate(90deg);
         }
     </style>
 </head>
@@ -143,9 +213,9 @@
                     <c:if test="${c.estado == 'CONFIRMADA'}"><c:set var="citasConfirmadas" value="${citasConfirmadas + 1}"/></c:if>
                 </c:forEach>
 
-                <div class="row g-3 mb-4">
+                <div class="row g-3 mb-4 row-cols-2 row-cols-md-3 row-cols-xl-5">
                     <div class="col">
-                        <div class="enc-stat-card shadow-sm">
+                        <div class="enc-stat-card shadow-sm h-100">
                             <div class="d-flex align-items-center">
                                 <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
                                     <i class="bi bi-box-seam"></i>
@@ -158,7 +228,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="enc-stat-card shadow-sm">
+                        <div class="enc-stat-card shadow-sm h-100">
                             <div class="d-flex align-items-center">
                                 <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
                                     <i class="bi bi-currency-dollar"></i>
@@ -171,7 +241,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="enc-stat-card shadow-sm">
+                        <div class="enc-stat-card shadow-sm h-100">
                             <div class="d-flex align-items-center">
                                 <div class="stat-icon bg-info bg-opacity-10 text-info me-3">
                                     <i class="bi bi-clock"></i>
@@ -184,7 +254,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="enc-stat-card shadow-sm">
+                        <div class="enc-stat-card shadow-sm h-100">
                             <div class="d-flex align-items-center">
                                 <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
                                     <i class="bi bi-check-circle"></i>
@@ -197,7 +267,7 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="enc-stat-card shadow-sm">
+                        <div class="enc-stat-card shadow-sm h-100">
                             <div class="d-flex align-items-center">
                                 <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
                                     <i class="bi bi-calendar-check"></i>
@@ -234,14 +304,19 @@
 
                 <!-- Formulario de Registro -->
                 <div class="enc-form-card mb-4" id="formEncomienda" 
-                     style="display:${param.accion == 'nuevo' or not empty param.mostrarForm ? 'block' : 'none'}">
+                     style="display:${param.accion == 'nuevo' or not empty mostrarForm or not empty param.mostrarForm ? 'block' : 'none'}">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-plus-circle me-2"></i>Registrar Nueva Encomienda</h5>
+                        <h5 class="fw-bold mb-0"><i class="bi bi-plus-circle me-2"></i>Registrar Nueva Encomienda
+                            <c:if test="${not empty citaData}">
+                                <small class="ms-2" style="font-size:.7rem;"><i class="bi bi-arrow-right"></i> Desde Cita #${citaData.idCita}</small>
+                            </c:if>
+                        </h5>
                         <button type="button" class="btn-close btn-close-white" onclick="ocultarFormulario()"></button>
                     </div>
                     <div class="card-body">
                         <form action="EncomiendaServlet" method="POST">
                             <input type="hidden" name="accion" value="registrar">
+                            <input type="hidden" name="idCitaOrigen" value="${citaData.idCita}">
                             <div class="mb-4">
                                 <label class="form-label fw-bold"><i class="bi bi-bus-front me-1"></i>Viaje de Transporte</label>
                                 <select class="form-select" name="idViaje" required>
@@ -265,11 +340,11 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label small">DNI <span class="text-danger">*</span></label>
-                                        <input type="text" name="dniRemitente" class="form-control" maxlength="8" pattern="\d{8}" placeholder="12345678" required>
+                                        <input type="text" name="dniRemitente" class="form-control" maxlength="8" pattern="\d{8}" placeholder="12345678" required value="${citaData.dniCliente}">
                                     </div>
                                     <div class="col-md-8">
                                         <label class="form-label small">Nombre Completo <span class="text-danger">*</span></label>
-                                        <input type="text" name="nombreRemitente" class="form-control" placeholder="Nombres y Apellidos" required>
+                                        <input type="text" name="nombreRemitente" class="form-control" placeholder="Nombres y Apellidos" required value="${citaData.nombreCliente}">
                                     </div>
                                 </div>
                             </div>
@@ -295,11 +370,11 @@
                                 <div class="row g-3">
                                     <div class="col-md-12">
                                         <label class="form-label small">Descripción del Contenido <span class="text-danger">*</span></label>
-                                        <input type="text" name="descripcion" class="form-control" placeholder="Ej: Caja de repuestos, Documentos legales, Ropa..." required>
+                                        <input type="text" name="descripcion" class="form-control" placeholder="Ej: Caja de repuestos, Documentos legales, Ropa..." required value="${citaData.descripcion}">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label small">Peso (Kg) <span class="text-danger">*</span></label>
-                                        <input type="number" name="pesoKg" class="form-control" step="0.1" min="0.1" placeholder="0.0" required>
+                                        <input type="number" name="pesoKg" class="form-control" step="0.1" min="0.1" placeholder="0.0" required value="${citaData.pesoEstimado}">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label small">Precio de Envío (S/.) <span class="text-danger">*</span></label>
@@ -317,12 +392,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="d-flex gap-2 justify-content-end">
-                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="ocultarFormulario()">
+                            <div class="d-flex gap-3 justify-content-end pt-2">
+                                <button type="button" class="btn-cancelar-enc" onclick="ocultarFormulario()">
                                     <i class="bi bi-x-lg me-1"></i> Cancelar
                                 </button>
-                                <button type="submit" class="btn btn-ingresar rounded-pill px-4">
-                                    <i class="bi bi-check-lg me-1"></i> Registrar Encomienda
+                                <button type="submit" class="btn-registrar-enc">
+                                    <i class="bi bi-box-seam me-2"></i> Registrar Encomienda
                                 </button>
                             </div>
                         </form>
@@ -383,7 +458,7 @@
                                         </tr>
                                     </c:forEach>
                                     <c:if test="${empty listaEncomiendas}">
-                                        <tr><td colspan="11"><div class="empty-state"><i class="bi bi-box-seam text-muted fs-1"></i><p class="mb-0">No se han registrado encomiendas aún.</p><button class="btn btn-warning btn-sm mt-2 rounded-pill" onclick="mostrarFormulario()"><i class="bi bi-plus-lg me-1"></i> Registrar primera encomienda</button></div></td></tr>
+                                        <tr><td colspan="11"><div class="empty-state"><i class="bi bi-box-seam text-muted fs-1"></i><p class="mb-0">No se han registrado encomiendas aún.</p><button class="btn-empty-enc" onclick="mostrarFormulario()"><i class="bi bi-plus-circle me-2"></i> Registrar primera encomienda</button></div></td></tr>
                                     </c:if>
                                 </tbody>
                             </table>
@@ -438,6 +513,7 @@
                                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                         <c:if test="${c.estado == 'PENDIENTE'}"><li><a class="dropdown-item" href="EncomiendaServlet?accion=actualizarEstadoCita&idCita=${c.idCita}&estado=CONFIRMADA"><i class="bi bi-check-circle text-success me-2"></i>Confirmar</a></li></c:if>
                                                         <c:if test="${c.estado == 'CONFIRMADA'}"><li><a class="dropdown-item" href="EncomiendaServlet?accion=actualizarEstadoCita&idCita=${c.idCita}&estado=COMPLETADA"><i class="bi bi-check-all text-primary me-2"></i>Marcar Completada</a></li></c:if>
+                                                        <c:if test="${c.estado == 'CONFIRMADA'}"><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-success fw-bold" href="EncomiendaServlet?accion=nuevoDesdeCita&idCita=${c.idCita}"><i class="bi bi-box-seam text-success me-2"></i>Crear Encomienda</a></li></c:if>
                                                         <c:if test="${c.estado != 'CANCELADA' and c.estado != 'COMPLETADA'}"><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="EncomiendaServlet?accion=actualizarEstadoCita&idCita=${c.idCita}&estado=CANCELADA" onclick="return confirm('¿Cancelar cita #${c.idCita}?')"><i class="bi bi-x-circle text-danger me-2"></i>Cancelar</a></li></c:if>
                                                     </ul>
                                                 </div>

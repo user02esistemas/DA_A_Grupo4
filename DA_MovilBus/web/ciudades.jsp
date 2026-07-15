@@ -1,7 +1,4 @@
-<%-- 
-    Document   : ciudades
-    CRUD completo para gestionar ciudades de MovilBus
---%>
+<%-- CRUD completo para gestionar ciudades de MovilBus --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="dao.CiudadDAO, model.Ciudad, model.Usuario, java.util.List"%>
@@ -10,7 +7,7 @@
     request.setAttribute("listaCiudades", ciudadDAO.listarTodas());
 %>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo ADMINISTRADOR puede gestionar ciudades
+    // Control de acceso: solo ADMINISTRADOR puede gestionar ciudades
     Usuario userCiu = (Usuario) session.getAttribute("usuarioSesion");
     if (userCiu == null) {
         response.sendRedirect("login.jsp");

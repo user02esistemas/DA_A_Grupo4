@@ -1,7 +1,4 @@
-<%-- 
-    Document   : viajes
-    Módulo de programación de viajes y asignación de tripulación
---%>
+<%-- Modulo de programacion de viajes y asignacion de tripulacion --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="dao.BusDAO, dao.ViajeDAO, dao.ConductorDAO, dao.RutaDAO, model.Usuario"%>
@@ -23,7 +20,7 @@
     request.setAttribute("listaViajes", viajeDAO.listarViajesProgramados());
 %>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo ADMINISTRADOR puede gestionar viajes
+    // Control de acceso: solo ADMINISTRADOR puede gestionar viajes
     Usuario userVia = (Usuario) session.getAttribute("usuarioSesion");
     if (userVia == null) {
         response.sendRedirect("login.jsp");

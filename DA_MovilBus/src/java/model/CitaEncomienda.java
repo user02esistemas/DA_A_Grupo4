@@ -1,13 +1,6 @@
 package model;
 
-import java.sql.Timestamp;
-
-/**
- * Modelo para Cita_Encomienda: agenda de citas para envío de paquetes.
- * Los clientes registran una cita desde la landing page y el personal
- * (admin/vendedor) la confirma y procesa.
- */
-public class CitaEncomienda {
+import java.sql.Timestamp;public class CitaEncomienda {
     private int idCita;
     private int idCliente;       // FK → Cliente (quien agenda)
     private int idOrigen;        // FK → Ciudades

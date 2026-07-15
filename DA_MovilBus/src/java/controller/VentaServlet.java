@@ -75,7 +75,7 @@ public class VentaServlet extends HttpServlet {
                 int capacidad = viajeDAO.obtenerCapacidadBusPorViaje(idViaje);
                 request.setAttribute("capacidadBus", capacidad);
 
-                // 🔥 SOLUCIÓN AQUÍ: Generamos y enviamos la lista inteligente que el ventas.jsp necesita renderizar
+                // Generar y enviar la lista de asientos para el croquis en ventas.jsp
                 List<model.Asiento> croquis = viajeDAO.generarCroquisDinamico(idViaje);
                 request.setAttribute("listaAsientosIntel", croquis);
             }
@@ -115,29 +115,20 @@ public class VentaServlet extends HttpServlet {
         
         String accion = request.getParameter("accion");
         
-        // ============================================================
-        // ACCIÓN: guardarVenta (SINGLE - una sola venta, legacy)
-        // ============================================================
+        // Accion: guardarVenta (single - una sola venta)
         if ("guardarVenta".equals(accion)) {
             procesarVentaUnica(request, response);
         } 
-        // ============================================================
-        // ACCIÓN: guardarVentaMulti (MULTIPLE - varios pasajes)
-        // ============================================================
+        // Accion: guardarVentaMulti (multiple - varios pasajes)
         else if ("guardarVentaMulti".equals(accion)) {
             procesarVentaMultiple(request, response);
         }
-        // ============================================================
-        // ACCIÓN: anularPasaje (REEMBOLSO - solo admin/vendedor)
-        // ============================================================
+        // Accion: anularPasaje (solo admin/vendedor)
         else if ("anularPasaje".equals(accion)) {
             procesarAnulacion(request, response);
         }
     }
     
-    // =================================================================
-    //  PROCESAR VENTA ÚNICA (un solo pasajero en un asiento)
-    // =================================================================
     private void procesarVentaUnica(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -186,14 +177,11 @@ public class VentaServlet extends HttpServlet {
                 throw ex;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Error en venta única: " + e.getMessage());
+            System.err.println("Error en venta unica: " + e.getMessage());
             response.sendRedirect(baseRedirect + "&status=error");
         }
     }
     
-    // =================================================================
-    //  PROCESAR VENTA MÚLTIPLE (varios pasajeros en varios asientos)
-    // =================================================================
     private void procesarVentaMultiple(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -256,7 +244,7 @@ public class VentaServlet extends HttpServlet {
                 }
                 
                 con.commit();
-                System.out.println("====== [OK] " + asientos.length + " PASAJES EMITIDOS ======");
+                System.out.println("[OK] " + asientos.length + " pasajes emitidos");
                 
                 // Redirigir al último pasaje generado (el usuario puede ver los demás en historial)
                 String[] ids = idsGenerados.toString().split(",");
@@ -268,22 +256,19 @@ public class VentaServlet extends HttpServlet {
                 throw ex;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Error en venta múltiple: " + e.getMessage());
+            System.err.println("Error en venta multiple: " + e.getMessage());
             response.sendRedirect(baseRedirect + "&status=error");
         }
     }
     
-    // =================================================================
-    //  ACCIÓN: ANULAR PASAJE (Reembolso)
-    //  Solo ADMINISTRADOR y VENDEDOR pueden anular
-    // =================================================================
+    /** Anula un pasaje. Solo ADMINISTRADOR y VENDEDOR pueden ejecutar esta accion. */
     private void procesarAnulacion(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         HttpSession sess = request.getSession(false);
         Usuario userAnul = (sess != null) ? (Usuario) sess.getAttribute("usuarioSesion") : null;
         
-        // 🔒 Verificar que sea ADMIN o VENDEDOR
+        // Verificar que sea ADMIN o VENDEDOR
         if (userAnul == null || (!"ADMINISTRADOR".equalsIgnoreCase(userAnul.getRol()) 
                 && !"VENDEDOR".equalsIgnoreCase(userAnul.getRol()))) {
             response.sendRedirect("login.jsp");
@@ -301,7 +286,7 @@ public class VentaServlet extends HttpServlet {
             boolean exito = viajeDAO.anularPasaje(idPasaje);
             
             if (exito) {
-                System.out.println("====== [OK] PASAJE #" + idPasaje + " ANULADO (REEMBOLSO) ======");
+                System.out.println("[OK] Pasaje #" + idPasaje + " anulado");
                 response.sendRedirect("VentaServlet?accion=historial&status=anulado");
             } else {
                 response.sendRedirect("VentaServlet?accion=historial&status=error");
@@ -311,9 +296,7 @@ public class VentaServlet extends HttpServlet {
         }
     }
 
-    // =================================================================
-    //  MÉTODOS AUXILIARES
-    // =================================================================
+    // Metodos auxiliares
     
     private String[] separarNombre(String nombreCompleto) {
         String nombre = nombreCompleto;
@@ -364,7 +347,6 @@ public class VentaServlet extends HttpServlet {
             try (var rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int idPasaje = rs.getInt(1);
-                    // ✅ Crear registro en Pago automáticamente 
                     String sqlPago = "INSERT INTO Pago (monto_total, metodo_pago, id_pasaje, id_vendedor) VALUES (?, 'EFECTIVO', ?, ?)";
                     try (PreparedStatement psPago = con.prepareStatement(sqlPago)) {
                         psPago.setDouble(1, precio);

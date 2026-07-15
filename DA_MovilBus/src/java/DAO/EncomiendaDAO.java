@@ -80,13 +80,13 @@ public class EncomiendaDAO {
             psPago.executeUpdate();
 
             con.commit();
-            System.out.println("====== [OK] ENCOMIENDA #" + idEncomiendaGenerado + " REGISTRADA ======");
+            System.out.println("[OK] Encomienda #" + idEncomiendaGenerado + " registrada");
             return true;
 
         } catch (SQLException e) {
             System.err.println("Error en transacción de EncomiendaDAO: " + e.getMessage());
             if (con != null) {
-                try { con.rollback(); } catch (SQLException ex) { System.err.println("Rollback falló: " + ex.getMessage()); }
+                try { con.rollback(); } catch (SQLException ex) { System.err.println("Rollback fallo: " + ex.getMessage()); }
             }
             return false;
         } finally {

@@ -19,7 +19,6 @@ public class ConexionBD {
             if (con == null || con.isClosed()) {
                 Properties prop = new Properties();
                 
-                // Leer el archivo desde el paquete config
                 try (InputStream input = ConexionBD.class.getResourceAsStream("/config/database.properties")) {
                     if (input == null) {
                         throw new RuntimeException("No se encontró el archivo 'database.properties' en config/");
@@ -28,7 +27,6 @@ public class ConexionBD {
                     prop.load(input);
                     Class.forName(DRIVER);
                     
-                    // Construimos la URL limpia combinando las variables cortas
                     String url = "jdbc:sqlserver://" + prop.getProperty("db.server") + ";"
                             + "databaseName=" + prop.getProperty("db.name") + ";"
                             + "encrypt=true;trustServerCertificate=true;";
@@ -37,7 +35,7 @@ public class ConexionBD {
                     String pwd = prop.getProperty("db.password");
                     
                     con = DriverManager.getConnection(url, usr, pwd);
-                    System.out.println("====== [OK] CONEXIÓN EXITOSA A MOVILBUSDB ======");
+                    System.out.println("[OK] Conexion exitosa a MovilBusDB");
                     
                 } catch (IOException e) {
                     throw new RuntimeException("Error al leer el archivo de propiedades", e);
@@ -55,10 +53,10 @@ public class ConexionBD {
         try {
             if (con != null && !con.isClosed()) {
                 con.close();
-                System.out.println("====== CONEXIÓN CERRADA ======");
+                System.out.println("[Info] Conexion cerrada");
             }
         } catch (SQLException e) {
-            System.err.println("Error al cerrar la conexión: " + e.getMessage());
+            System.err.println("Error al cerrar la conexion: " + e.getMessage());
         }
     }
 }

@@ -10,17 +10,17 @@ BEGIN
 END
 GO
 
--- =========================================================================
--- 2. CREAR NUEVA BASE DE DATOS LIMPIA
--- =========================================================================
+
+-- CREAR NUEVA BASE DE DATOS LIMPIA
+
 CREATE DATABASE [MovilBusDB];
 GO
 USE [MovilBusDB];
 GO
 
--- =========================================================================
--- 3. CREACIÓN DE TABLAS MAESTRAS (Sin dependencias externas)
--- =========================================================================
+
+-- CREACIÓN DE TABLAS MAESTRAS (Sin dependencias externas)
+
 
 CREATE TABLE Roles (
     id_rol INT IDENTITY(1,1) PRIMARY KEY,
@@ -68,9 +68,9 @@ CREATE TABLE Tipo_Asiento (
     precio_adicional DECIMAL(8, 2) NOT NULL DEFAULT 0.00
 );
 
--- =========================================================================
--- 4. TABLAS SECUNDARIAS (Con dependencias de nivel 1)
--- =========================================================================
+
+-- TABLAS SECUNDARIAS (Con dependencias de nivel 1)
+
 
 -- Tabla Unificada de Usuarios
 CREATE TABLE Usuarios (
@@ -92,7 +92,7 @@ CREATE TABLE Bus_Asiento (
     piso INT NOT NULL,
     fila INT NOT NULL,
     columna INT NOT NULL,
-    posicion VARCHAR(30) NOT NULL DEFAULT 'VENTANA';,
+    posicion VARCHAR(30) NOT NULL DEFAULT 'VENTANA',
     estado VARCHAR(20) NOT NULL DEFAULT 'DISPONIBLE',
     id_tipo_asiento INT NOT NULL,
     recargo_ubicacion DECIMAL(8, 2) NOT NULL DEFAULT 0.00, -- Extra por ser ventana solitaria/individual
@@ -126,9 +126,9 @@ CREATE TABLE Cliente (
     CONSTRAINT FK_Cliente_Usuarios FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario)
 );
 
--- =========================================================================
--- 5. TABLAS OPERATIVAS Y TRANSACCIONALES (Con dependencias de nivel 2)
--- =========================================================================
+
+-- TABLAS OPERATIVAS Y TRANSACCIONALES (Con dependencias de nivel 2)
+
 
 -- El Viaje
 CREATE TABLE Viaje (
@@ -169,6 +169,8 @@ CREATE TABLE Pasaje (
 );
 
 -- Pagos de los Pasajes
+-- NOTA: id_vendedor puede ser NULL (compra web del cliente) 
+-- o tener un id de usuario (venta por ADMINISTRADOR/VENDEDOR)
 CREATE TABLE Pago (
     id_pago INT IDENTITY(1,1) PRIMARY KEY,
     monto_total DECIMAL(8, 2) NOT NULL,
@@ -176,7 +178,7 @@ CREATE TABLE Pago (
     fecha_pago DATETIME2(7) NOT NULL DEFAULT GETDATE(),
     numero_operacion VARCHAR(50) NULL,
     id_pasaje INT NOT NULL,
-    id_vendedor INT NULL,
+    id_vendedor INT NULL,  -- NULL = compra por cliente web; con ID = venta por administrador/vendedor
     CONSTRAINT FK_Pago_Pasaje FOREIGN KEY (id_pasaje) REFERENCES Pasaje(id_pasaje),
     CONSTRAINT FK_Pago_Vendedor FOREIGN KEY (id_vendedor) REFERENCES Usuarios(id_usuario)
 );
@@ -184,9 +186,73 @@ GO
 PRINT 'Estructura de tablas recreada correctamente.';
 GO
 
--- =========================================================================
--- 6. INSERCIÓN DE DATOS INICIALES (DATA SEMILLA)
--- =========================================================================
+
+-- TABLA DE ENCOMIENDAS (Envío de paquetes)
+
+CREATE TABLE Encomienda (
+    id_encomienda INT IDENTITY(1,1) PRIMARY KEY,
+    descripcion_contenido VARCHAR(255) NOT NULL,  -- Ej: "Caja de repuestos", "Documentos"
+    peso_kg DECIMAL(6, 2) NOT NULL,
+    precio_envio DECIMAL(8, 2) NOT NULL,
+    estado VARCHAR(30) NOT NULL DEFAULT 'REGISTRADO',  -- 'REGISTRADO', 'EN VIAJE', 'ENTREGADO', 'ANULADO'
+    fecha_envio DATETIME2(7) NOT NULL DEFAULT GETDATE(),
+    fecha_entrega_real DATETIME2(7) NULL,
+    
+    -- Relaciones clave
+    id_viaje INT NOT NULL,                           -- En qué viaje/bus se transporta
+    id_remitente INT NOT NULL,                       -- Quién envía (FK a Cliente)
+    id_destinatario INT NOT NULL,                     -- Quién recibe (FK a Cliente)
+    
+    CONSTRAINT FK_Encomienda_Viaje FOREIGN KEY (id_viaje) REFERENCES Viaje(id_viaje),
+    CONSTRAINT FK_Encomienda_Remitente FOREIGN KEY (id_remitente) REFERENCES Cliente(id_cliente),
+    CONSTRAINT FK_Encomienda_Destinatario FOREIGN KEY (id_destinatario) REFERENCES Cliente(id_cliente)
+);
+GO
+
+-- Modificar Pago para soportar también encomiendas
+ALTER TABLE Pago
+ALTER COLUMN id_pasaje INT NULL;  -- Ahora un pago puede no tener pasaje (si es encomienda)
+GO
+
+ALTER TABLE Pago
+ADD id_encomienda INT NULL;  -- Nueva FK opcional para encomiendas
+GO
+
+ALTER TABLE Pago
+ADD CONSTRAINT FK_Pago_Encomienda FOREIGN KEY (id_encomienda) REFERENCES Encomienda(id_encomienda);
+GO
+
+PRINT 'Tabla Encomienda creada y Pago modificado correctamente.';
+GO
+
+
+-- TABLA DE CITAS DE ENCOMIENDA (Agenda para clientes)
+
+CREATE TABLE Cita_Encomienda (
+    id_cita INT IDENTITY(1,1) PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_origen INT NOT NULL,
+    id_destino INT NOT NULL,
+    descripcion VARCHAR(255) NOT NULL,
+    peso_estimado DECIMAL(6,2) NOT NULL DEFAULT 1.0,
+    fecha_preferida DATE NOT NULL,
+    hora_preferida VARCHAR(5) NOT NULL,  -- HH:mm
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE',  -- PENDIENTE, CONFIRMADA, CANCELADA, COMPLETADA
+    fecha_registro DATETIME2(7) NOT NULL DEFAULT GETDATE(),
+    observaciones VARCHAR(500) NULL,
+    
+    CONSTRAINT FK_Cita_Cliente FOREIGN KEY (id_cliente) REFERENCES Cliente(id_cliente),
+    CONSTRAINT FK_Cita_Origen FOREIGN KEY (id_origen) REFERENCES Ciudades(id_ciudad),
+    CONSTRAINT FK_Cita_Destino FOREIGN KEY (id_destino) REFERENCES Ciudades(id_ciudad)
+);
+GO
+
+PRINT 'Tabla Cita_Encomienda creada correctamente.';
+GO
+
+
+-- INSERCIÓN DE DATOS INICIALES (DATA SEMILLA)
+
 
 -- Roles Base
 INSERT INTO Roles (nombre_rol) VALUES 
@@ -197,9 +263,7 @@ INSERT INTO Roles (nombre_rol) VALUES
 -- Usuarios Iniciales
 INSERT INTO Usuarios (username, password, nombre, apellido, id_rol) VALUES 
 ('admin', '123456', 'Juan', 'Perez', 1),
-('vendedor1', '123456', 'Maria', 'Gomez', 2)
-('cliente', '123456', 'Mariana', 'lucha', 3)
-;
+('vendedor1', '123456', 'Maria', 'Gomez', 2);
 
 -- Ciudades de Origen y Destino
 INSERT INTO Ciudades (nombre, departamento) VALUES 

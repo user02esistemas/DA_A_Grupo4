@@ -1,13 +1,9 @@
-<%-- 
-    Document   : ventas
-    Módulo de venta de pasajes - SOLO ADMINISTRADOR Y VENDEDOR
-    Los clientes realizan sus compras desde index.jsp (landing page)
---%>
+<%-- Modulo de venta de pasajes - solo ADMINISTRADOR y VENDEDOR --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="java.util.List, java.util.Map, dao.CiudadDAO, model.Ciudad, model.Usuario"%>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo ADMINISTRADOR y VENDEDOR
+    // Control de acceso: solo ADMINISTRADOR y VENDEDOR
     Usuario user = (Usuario) session.getAttribute("usuarioSesion");
     if (user == null) {
         response.sendRedirect("login.jsp");

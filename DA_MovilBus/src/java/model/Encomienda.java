@@ -1,12 +1,6 @@
 package model;
 
-import java.sql.Timestamp;
-
-/**
- * Modelo para la entidad Encomienda (envío de paquetes).
- * Cada encomienda se asocia a un Viaje, un Remitente (Cliente) y un Destinatario (Cliente).
- */
-public class Encomienda {
+import java.sql.Timestamp;public class Encomienda {
     private int idEncomienda;
     private String descripcionContenido;
     private double pesoKg;

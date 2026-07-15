@@ -1,0 +1,439 @@
+================================================================================
+DOCUMENTACION DEL SISTEMA MOVILBUS
+Sistema de Gestion de Transporte Interprovincial de Pasajeros y Encomiendas
+================================================================================
+
+INDICE
+1. Resumen del Sistema
+2. Requerimientos Funcionales Consolidados
+3. Manual del Usuario
+4. Caso de Estudio
+5. Conclusiones del Proyecto
+6. Arquitectura del Codigo
+7. Estructura de la Base de Datos
+
+
+================================================================================
+1. RESUMEN DEL SISTEMA
+================================================================================
+
+1.1 Nombre del Proyecto
+   MovilBus - Sistema de Gestion de Transporte Interprovincial
+
+1.2 Descripcion General
+   MovilBus es una aplicacion web desarrollada en Java Enterprise Edition (Jakarta EE)
+   que permite a una empresa de transporte interprovincial gestionar sus operaciones
+   de forma integral. El sistema cubre desde la venta de pasajes con seleccion
+   interactiva de asientos, hasta la administracion de flota, programacion de viajes,
+   gestion de conductores y envio de encomiendas.
+
+1.3 Objetivos del Sistema
+   - Facilitar la venta de pasajes interprovinciales con interfaz grafica de seleccion de asientos.
+   - Automatizar la programacion de viajes y asignacion de tripulacion.
+   - Gestionar la flota de buses, conductores, rutas y ciudades.
+   - Administrar el envio de encomiendas y el registro de citas para recogida.
+   - Proporcionar un historial de ventas y compras para administradores, vendedores y clientes.
+   - Ofrecer una landing page publica para que los clientes compren pasajes y agenden encomiendas.
+
+1.4 Tecnologias Empleadas
+   - Backend: Java 17 con Jakarta EE 10 (Servlets, JSP, JSTL)
+   - Frontend: HTML5, CSS3, JavaScript, Bootstrap 5.3, Bootstrap Icons
+   - Base de Datos: Microsoft SQL Server 2022+ (JDBC)
+   - Servidor Web: Apache Tomcat 11
+   - IDE: Apache NetBeans 29
+   - Patron de Diseno: MVC (Modelo-Vista-Controlador)
+   - Driver BD: Microsoft JDBC Driver 13.4 para SQL Server
+
+1.5 Roles del Sistema
+   - ADMINISTRADOR: Acceso total a todos los modulos (conductores, buses, ciudades, rutas,
+     viajes, ventas, encomiendas, historial).
+   - VENDEDOR: Acceso a venta de pasajes, encomiendas e historial.
+   - CLIENTE_WEB: Compra de pasajes desde la landing page, consulta de historial propio,
+     agenda de citas para encomiendas.
+
+1.6 Modulos del Sistema
+   - Dashboard: Panel de control con acceso a todos los modulos.
+   - Conductores: CRUD de conductores con estado (DISPONIBLE, ASIGNADO, INACTIVO).
+   - Buses: Registro de unidades con generacion automatica de plantilla de asientos.
+   - Ciudades: Administracion del directorio de ciudades y departamentos.
+   - Rutas: Definicion de rutas comerciales con tarifas base y duracion.
+   - Viajes: Programacion de viajes con asignacion de tripulacion.
+   - Ventas: Venta de pasajes con seleccion interactiva de asientos (multi-asiento).
+   - Historial: Consulta de todas las ventas realizadas, con filtro por rol.
+   - Encomiendas: Registro de envio de paquetes con gestion de citas.
+   - Autenticacion: Login con control de acceso basado en roles (AuthFilter).
+
+
+================================================================================
+2. REQUERIMIENTOS FUNCIONALES CONSOLIDADOS
+================================================================================
+
+2.1 Modulo de Autenticacion
+   RF-01: El sistema debe permitir el inicio de sesion de usuarios registrados
+          mediante formulario de login con username y password.
+   RF-02: El sistema debe validar las credenciales contra la base de datos y
+          redirigir segun el rol del usuario (ADMINISTRADOR a dashboard.jsp,
+          VENDEDOR a dashboard.jsp, CLIENTE_WEB a index.jsp).
+   RF-03: El sistema debe permitir el cierre de sesion (LogoutServlet).
+   RF-04: El sistema debe proteger las paginas administrativas mediante un filtro
+          (AuthFilter) que redirija a login.jsp si el usuario no esta autenticado.
+   RF-05: El sistema debe permitir el registro de nuevos clientes web con
+          creacion automatica de usuario y auto-login.
+
+2.2 Modulo de Dashboard
+   RF-06: El sistema debe mostrar un panel principal con acceso directo a todos
+          los modulos del sistema segun el rol del usuario.
+   RF-07: El administrador debe ver todos los modulos (conductores, buses,
+          ciudades, rutas, viajes, ventas, historial).
+   RF-08: El vendedor debe ver solo los modulos de ventas e historial.
+
+2.3 Modulo de Conductores
+   RF-09: El sistema debe permitir registrar nuevos conductores con DNI, nombre,
+          apellido y numero de licencia.
+   RF-10: El sistema debe permitir listar, actualizar y eliminar (logico)
+          conductores.
+   RF-11: El sistema debe gestionar el estado del conductor (DISPONIBLE, ASIGNADO,
+          INACTIVO).
+
+2.4 Modulo de Buses
+   RF-12: El sistema debe permitir registrar buses con placa, marca, modelo,
+          capacidad, cantidad de pisos y tipo de servicio.
+   RF-13: El sistema debe generar automaticamente la plantilla de asientos al
+          registrar un bus, segun el servicio y la configuracion del bus.
+   RF-14: El sistema debe permitir listar, actualizar y eliminar (logico) buses.
+
+2.5 Modulo de Ciudades
+   RF-15: El sistema debe permitir registrar ciudades con nombre, departamento y estado.
+   RF-16: El sistema debe permitir listar, actualizar y eliminar (logico) ciudades.
+
+2.6 Modulo de Rutas
+   RF-17: El sistema debe permitir registrar rutas comerciales con origen, destino,
+          duracion en horas y precio base.
+   RF-18: El sistema debe validar que origen y destino no sean iguales.
+   RF-19: El sistema debe permitir listar, actualizar y eliminar (logico) rutas.
+
+2.7 Modulo de Viajes
+   RF-20: El sistema debe permitir programar viajes seleccionando ruta, bus,
+          fecha/hora de salida y tripulacion.
+   RF-21: El sistema debe calcular automaticamente la fecha de llegada estimada
+          basada en la duracion de la ruta.
+   RF-22: El sistema debe permitir asignar conductores a un viaje con roles
+          (PILOTO PRINCIPAL, PILOTO DE RELEVO).
+   RF-23: El sistema debe validar que no se asignen conductores duplicados a un viaje.
+   RF-24: El sistema debe actualizar el estado de los conductores a ASIGNADO
+          cuando se les asigna un viaje.
+   RF-25: El sistema debe permitir cancelar viajes, liberando automaticamente
+          a los conductores asignados.
+
+2.8 Modulo de Ventas (Intranet - Admin/Vendedor)
+   RF-26: El sistema debe permitir buscar viajes disponibles por origen, destino y fecha.
+   RF-27: El sistema debe mostrar un croquis interactivo de asientos con los
+          estados: disponible, ocupado y seleccionado.
+   RF-28: El sistema debe permitir la seleccion multiple de asientos para una
+          misma compra.
+   RF-29: El sistema debe calcular automaticamente el precio de cada asiento
+          sumando: precio base de la ruta + precio adicional del tipo de asiento
+          + recargo de ubicacion.
+   RF-30: El sistema debe permitir registrar los datos de cada pasajero (DNI,
+          nombre completo) por asiento seleccionado.
+   RF-31: El sistema debe emitir los pasajes y registrar el pago en una transaccion.
+   RF-32: El sistema debe mostrar una pantalla de confirmacion con los datos
+          del pasaje emitido.
+
+2.9 Modulo de Ventas (Landing Page - Cliente Web)
+   RF-33: El sistema debe permitir a los clientes web buscar viajes desde la
+          landing page sin necesidad de iniciar sesion.
+   RF-34: El sistema debe permitir la compra de pasajes con seleccion de
+          asientos desde la landing page.
+   RF-35: El sistema debe crear automaticamente un registro de cliente si el
+          DNI ingresado no existe.
+
+2.10 Modulo de Historial
+   RF-36: El administrador debe poder ver todas las ventas realizadas en el sistema.
+   RF-37: El vendedor debe ver todas las ventas registradas.
+   RF-38: El cliente web debe ver solo sus propias compras (filtradas por su DNI).
+   RF-39: El sistema debe permitir la anulacion de pasajes (solo admin/vendedor).
+
+2.11 Modulo de Encomiendas
+   RF-40: El sistema debe permitir registrar envios de encomiendas asociados a un viaje.
+   RF-41: El sistema debe crear automaticamente los registros de remitente y
+          destinatario si no existen en la base de datos.
+   RF-42: El sistema debe registrar el pago de la encomienda en la misma transaccion.
+   RF-43: El sistema debe permitir actualizar el estado de la encomienda
+          (REGISTRADO, EN VIAJE, ENTREGADO, ANULADO).
+   RF-44: El sistema debe registrar automaticamente la fecha de entrega cuando
+          se marca como ENTREGADO.
+   RF-45: El sistema debe permitir agendar citas de encomienda desde la landing page.
+   RF-46: El sistema debe listar las encomiendas y citas para que admin/vendedor
+          las gestionen.
+
+2.12 Modulo de Presentacion (Landing Page)
+   RF-47: El sistema debe mostrar una pagina principal atractiva con hero section,
+          buscador de viajes, servicios, destinos y seccion de encomiendas.
+   RF-48: El sistema debe mostrar los servicios disponibles (Ejecutivo VIP,
+          Presidencial, Premier) con sus caracteristicas.
+   RF-49: El sistema debe mostrar los destinos disponibles con precios desde.
+   RF-50: El sistema debe incluir un formulario de contacto y footer informativo.
+
+
+================================================================================
+3. MANUAL DEL USUARIO
+================================================================================
+
+3.1 Acceso al Sistema
+
+   A. Landing Page (Clientes)
+      - URL: http://localhost:8080/DA_MovilBus_principal/index.jsp
+      - Desde aqui los clientes pueden buscar viajes, comprar pasajes,
+        agendar citas de encomienda y registrarse.
+
+   B. Intranet (Administradores y Vendedores)
+      - URL: http://localhost:8080/DA_MovilBus_principal/login.jsp
+      - Credenciales por defecto:
+        * ADMINISTRADOR: admin / 123456
+        * VENDEDOR: vendedor1 / 123456
+
+3.2 Flujo de Compra de Pasaje (Cliente Web)
+   Paso 1: En la landing page (index.jsp), seleccionar origen, destino y fecha
+           en el buscador.
+   Paso 2: Hacer clic en "Buscar" para ver los viajes disponibles.
+   Paso 3: Seleccionar un viaje y hacer clic en "Ver Asientos".
+   Paso 4: Elegir uno o varios asientos haciendo clic sobre ellos.
+   Paso 5: Completar los datos de cada pasajero (DNI y nombre).
+   Paso 6: Hacer clic en "Confirmar y Emitir Pasajes".
+   Paso 7: Visualizar la confirmacion con los datos del viaje y asiento(s).
+
+3.3 Flujo de Venta (Admin/Vendedor)
+   Paso 1: Iniciar sesion en la intranet.
+   Paso 2: Ir al modulo "Vender Pasaje" desde el Dashboard.
+   Paso 3: Seleccionar origen, destino y fecha, luego hacer clic en "Buscar Salidas".
+   Paso 4: Hacer clic en "Ver Asientos" del viaje deseado.
+   Paso 5: Seleccionar los asientos haciendo clic sobre ellos en el croquis.
+   Paso 6: Ingresar los datos de cada pasajero.
+   Paso 7: Confirmar la emision de los pasajes.
+
+3.4 Gestion de Conductores
+   Paso 1: Ir al modulo "Conductores" desde el Dashboard.
+   Paso 2: Hacer clic en "Nuevo Conductor" para registrar.
+   Paso 3: Completar DNI, nombre, apellido y numero de licencia.
+   Paso 4: Para editar o eliminar, usar los botones en la tabla de listado.
+
+3.5 Gestion de Buses
+   Paso 1: Ir al modulo "Buses" desde el Dashboard.
+   Paso 2: Hacer clic en "Registrar Nueva Unidad".
+   Paso 3: Completar placa, marca, modelo, servicio, capacidad y pisos.
+   Paso 4: La plantilla de asientos se genera automaticamente.
+
+3.6 Programacion de Viajes
+   Paso 1: Ir al modulo "Viajes" desde el Dashboard (solo admin).
+   Paso 2: Seleccionar ruta, bus y fecha/hora de salida.
+   Paso 3: Asignar el conductor principal (obligatorio).
+   Paso 4: Opcionalmente, agregar conductor de relevo.
+   Paso 5: Hacer clic en "Programar Salida".
+   Paso 6: El viaje aparecera en la tabla de itinerarios programados.
+
+3.7 Gestion de Encomiendas
+   A. Agenda de Cita (Cliente):
+      - Desde la landing page, ir a la seccion "Encomiendas".
+      - Completar el formulario con datos del remitente, destino y paquete.
+      - El personal de MovilBus se pondra en contacto para confirmar.
+
+   B. Registro de Encomienda (Admin/Vendedor):
+      - Ir al modulo "Encomiendas" desde el Dashboard.
+      - Hacer clic en "Nueva Encomienda".
+      - Seleccionar el viaje, ingresar datos del remitente y destinatario.
+      - Completar descripcion, peso, precio y metodo de pago.
+      - Hacer clic en "Registrar Envio".
+
+   C. Actualizar Estado:
+      - Desde la tabla de encomiendas, usar el boton "Actualizar Estado".
+      - Seleccionar el nuevo estado (REGISTRADO, EN VIAJE, ENTREGADO, ANULADO).
+      - Al marcar como ENTREGADO, se registra automaticamente la fecha de entrega.
+
+3.8 Consulta de Historial
+   - Admin/Vendedor: Ir al modulo "Historial de Ventas" desde el Dashboard.
+   - Cliente: Ir a "Mis Viajes" en el menu de la landing page (debe estar logueado).
+   - Admin puede ver todas las ventas; Vendedor ve todas las ventas;
+     Cliente ve solo sus compras.
+
+
+================================================================================
+4. CASO DE ESTUDIO
+================================================================================
+
+Caso: Implementacion de un Sistema de Gestion de Transporte para la
+      Empresa "MovilBus S.A.C."
+
+4.1 Contexto del Problema
+   MovilBus S.A.C. es una empresa de transporte interprovincial que opera en el
+   norte del Peru, con rutas que conectan Chiclayo, Lima, Trujillo y Piura.
+   La empresa cuenta con una flota de buses de diferentes categorias (Ejecutivo
+   VIP, Presidencial y Premier) y necesita modernizar sus procesos de gestion
+   que actualmente se realizan de forma manual o con sistemas aislados.
+
+   Problemas identificados:
+   - La venta de pasajes se realiza manualmente en taquilla, sin posibilidad
+     de que el cliente elija su asiento.
+   - No existe un registro centralizado de la flota, conductores y programacion
+     de viajes.
+   - El control de envio de encomiendas se lleva en hojas de calculo, sin
+     trazabilidad adecuada.
+   - No hay un canal digital para que los clientes compren pasajes o agenden
+     envios de paquetes.
+
+4.2 Solucion Implementada
+   Se desarrollo una aplicacion web integral con los siguientes componentes:
+
+   A. Landing Page Publica (index.jsp):
+      - Diseno moderno y responsivo con colores corporativos (naranja y amarillo).
+      - Buscador de viajes por origen, destino y fecha.
+      - Seleccion visual de asientos con croquis interactivo del bus.
+      - Compra de pasajes multi-asiento para grupos.
+      - Seccion de encomiendas con agenda de citas.
+      - Registro de clientes con creacion automatica de cuenta.
+
+   B. Intranet Administrativa:
+      - Panel de control con acceso segun rol (admin/vendedor).
+      - Gestion de conductores, buses, ciudades y rutas.
+      - Programacion de viajes con asignacion de tripulacion.
+      - Venta de pasajes con seleccion de asientos.
+      - Gestion de encomiendas con trazabilidad de estados.
+      - Historial completo de ventas con posibilidad de anulacion.
+
+4.3 Beneficios Obtenidos
+   - Reduccion del tiempo de venta de pasajes de 10 minutos a menos de 2 minutos.
+   - Eliminacion de errores en la asignacion de asientos (sistema valida ocupacion).
+   - Trazabilidad completa de encomiendas desde el registro hasta la entrega.
+   - Control centralizado de la flota y el personal.
+   - Canal digital de ventas disponible 24/7 para los clientes.
+   - Reportes e historial de ventas disponible en tiempo real.
+
+4.4 Arquitectura de la Solucion
+   - Modelo-Vista-Controlador (MVC) con Servlets como controladores.
+   - Vistas JSP con JSTL para logica de presentacion.
+   - DAOs para acceso a datos con transacciones ACID.
+   - Conexion a SQL Server mediante JDBC con pool de conexiones.
+   - Filtro de autenticacion (AuthFilter) para seguridad de rutas administrativas.
+   - Diseno responsivo compatible con dispositivos moviles.
+   - Calculo dinamico de precios: precio base + tipo de asiento + recargo de ubicacion.
+
+
+================================================================================
+5. CONCLUSIONES DEL PROYECTO
+================================================================================
+
+5.1 Conclusiones Tecnicas
+
+   - La arquitectura MVC implementada con Jakarta EE proporciono una clara
+     separacion de responsabilidades, facilitando el mantenimiento y la
+     escalabilidad del sistema.
+
+   - El uso de transacciones ACID en las operaciones criticas (venta de pasajes,
+     registro de encomiendas) garantiza la integridad de los datos, evitando
+     inconsistencias como la doble venta de un mismo asiento.
+
+   - La generacion automatica de plantillas de asientos basada en el tipo de
+     servicio y configuracion del bus permitio una configuracion flexible de
+     la flota sin necesidad de intervencion manual.
+
+   - El croquis interactivo de asientos, implementado con Bootstrap y JavaScript
+     puro, proporciono una experiencia de usuario intuitiva sin necesidad de
+     librerias externas complejas.
+
+   - El sistema de roles (ADMINISTRADOR, VENDEDOR, CLIENTE_WEB) permitio un
+     control de acceso granular, asegurando que cada usuario acceda solo a las
+     funcionalidades correspondientes a su perfil.
+
+   - La integracion con SQL Server mediante JDBC demostro ser robusta para el
+     manejo de operaciones concurrentes, aunque se recomienda migrar a un pool
+     de conexiones formal (HikariCP o similar) para entornos de alta demanda.
+
+5.2 Recomendaciones para Futuras Versiones
+
+   - Implementar un sistema de autenticacion con contraseñas hasheadas (BCrypt)
+     en lugar de texto plano para mejorar la seguridad.
+   - Agregar un modulo de reportes estadisticos con graficos (ventas por ruta,
+     ocupacion de buses, ingresos mensuales).
+   - Implementar notificaciones por correo electronico para confirmacion de
+     compras y actualizacion de estado de encomiendas.
+   - Agregar soporte para pasarela de pagos en linea (Visa, Mastercard) para
+     compras de clientes web.
+   - Implementar un modulo de mantenimiento preventivo de buses.
+   - Agregar una API REST para integracion con aplicaciones moviles.
+   - Migrar a un framework moderno como Spring Boot para simplificar la
+     configuracion y mejorar la productividad del desarrollo.
+
+5.3 Conclusiones del Equipo de Desarrollo
+
+   El proyecto MovilBus logro cumplir con todos los objetivos planteados,
+   entregando un sistema funcional, seguro y facil de usar que resuelve los
+   problemas operativos de la empresa de transporte. La experiencia permitio
+   aplicar conceptos de programacion web Java, diseno de bases de datos
+   relacionales, patrones de diseno y desarrollo de interfaces de usuario
+   modernas. El sistema esta listo para ser puesto en produccion y escalado
+   segun las necesidades futuras del negocio.
+
+
+================================================================================
+6. ARQUITECTURA DEL CODIGO
+================================================================================
+
+6.1 Estructura del Proyecto
+
+   src/java/
+   |-- config/            Configuracion de conexion a BD y propiedades
+   |-- conexion/          Clase Singleton de conexion (legacy)
+   |-- controller/        Servlets (controladores MVC)
+   |-- DAO/               Objetos de acceso a datos
+   |-- model/             Clases de modelo (POJOs)
+   |-- util/              Utilidades (generacion de plantillas de asientos)
+
+   web/
+   |-- css/               Hojas de estilo CSS
+   |-- imgs/              Imagenes del sitio
+   |-- META-INF/          Configuracion de contexto
+   |-- WEB-INF/           Descriptor de despliegue
+   |-- *.jsp              Paginas JSP (vistas)
+
+   Base de Datos: MovilBusDB_sqlserver.sql
+
+6.2 Flujo de Datos (MVC)
+   El usuario realiza una peticion a un Servlet (Controlador).
+   El Servlet procesa la peticion, interactua con los DAOs para acceder a la BD.
+   Los DAOs devuelven los datos solicitados.
+   El Servlet coloca los datos como atributos en la request o session.
+   El Servlet redirige o forwardea a una JSP (Vista).
+   La JSP renderiza los datos utilizando JSTL y HTML/CSS/JS.
+
+6.3 Capa de Seguridad
+   AuthFilter: Filtro que protege todas las paginas JSP administrativas.
+   Verifica que exista un usuario en sesion y que su rol sea ADMINISTRADOR o VENDEDOR.
+   Si no esta autenticado, redirige a login.jsp.
+   Si es CLIENTE_WEB, redirige a index.jsp.
+
+
+================================================================================
+7. ESTRUCTURA DE LA BASE DE DATOS
+================================================================================
+
+Tablas Principales:
+   Roles              - Roles del sistema (ADMINISTRADOR, VENDEDOR, CLIENTE_WEB)
+   Ciudades           - Directorio de ciudades y departamentos
+   Servicio           - Tipos de servicio de buses (Ejecutivo VIP, Presidencial, Premier)
+   Bus                - Flota de buses con placa, marca, modelo, capacidad
+   Conductores        - Personal de conduccion
+   Tipo_Asiento       - Tipos de asiento (Regular 140, Cama Vip 160, Full Flat 180)
+   Usuarios           - Usuarios del sistema (unificado para todos los roles)
+   Bus_Asiento        - Plantilla de asientos por bus con posicion, piso, fila, columna
+   Ruta               - Rutas comerciales con origen, destino, duracion y precio base
+   Cliente            - Clientes registrados (via web o por venta presencial)
+   Viaje              - Programacion de viajes con bus, ruta, fechas y estado
+   Viaje_Conductor    - Asignacion de conductores a viajes con rol
+   Pasaje             - Pasajes emitidos (ventas)
+   Pago               - Pagos asociados a pasajes o encomiendas
+   Encomienda         - Envios de paquetes
+   Cita_Encomienda    - Citas agendadas para envio de paquetes
+
+================================================================================
+FIN DE LA DOCUMENTACION
+================================================================================

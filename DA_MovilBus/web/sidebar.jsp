@@ -1,12 +1,5 @@
-<%-- 
-    Document   : sidebar
-    Sidebar reutilizable para el panel de administración de MovilBus.
-    Se incluye solo en páginas para ADMINISTRADOR y VENDEDOR.
-
-    Parámetros esperados (request attributes o pageContext):
-      - activePage: String (dashboard, conductores, buses, ciudades, rutas, viajes, ventas, historial)
-      - esAdmin: boolean (true si el usuario es ADMINISTRADOR)
---%>
+<%-- Sidebar reutilizable para el panel de administracion de MovilBus. 
+  Parametros: activePage (String), esAdmin (boolean) --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
     String active = request.getParameter("activePage");

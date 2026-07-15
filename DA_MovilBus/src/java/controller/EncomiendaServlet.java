@@ -29,10 +29,7 @@ public class EncomiendaServlet extends HttpServlet {
         if (accion == null) accion = "";
 
         try {
-            // ============================================================
-            //  ACCIÓN PÚBLICA PARA CLIENTES: historialEncomienda
-            //  Permite al CLIENTE_WEB ver sus encomiendas y citas desde index.jsp
-            // ============================================================
+                // Accion publica para clientes: historialEncomienda
             if ("historialEncomienda".equals(accion)) {
                 HttpSession sess = request.getSession(false);
                 Usuario userHist = (sess != null) ? (Usuario) sess.getAttribute("usuarioSesion") : null;
@@ -47,9 +44,7 @@ public class EncomiendaServlet extends HttpServlet {
                 return;
             }
 
-            // ============================================================
-            //  ACCIONES DE ADMIN/VENDEDOR (requieren autenticación)
-            // ============================================================
+                // Acciones de admin/vendedor (requieren autenticacion)
             HttpSession sess = request.getSession(false);
             Usuario user = (sess != null) ? (Usuario) sess.getAttribute("usuarioSesion") : null;
             if (user == null || (!"ADMINISTRADOR".equalsIgnoreCase(user.getRol())
@@ -59,13 +54,30 @@ public class EncomiendaServlet extends HttpServlet {
             }
 
             if ("listar".equals(accion)) {
-                // Listar todas las encomiendas + citas
+                // Listar todas las encomiendas + citas + viajes disponibles
                 request.setAttribute("listaEncomiendas", encomiendaDAO.listarEncomiendas());
                 request.setAttribute("listaCitas", citaDAO.listarCitas());
+                request.setAttribute("listaViajes", viajeDAO.listarViajesProgramados());
                 request.getRequestDispatcher("encomiendas.jsp").forward(request, response);
 
             } else if ("nuevo".equals(accion)) {
                 request.setAttribute("listaViajes", viajeDAO.listarViajesProgramados());
+                request.getRequestDispatcher("encomiendas.jsp").forward(request, response);
+
+            } else if ("nuevoDesdeCita".equals(accion)) {
+                // Cargar datos de la cita para pre-llenar el formulario
+                String idCitaStr = request.getParameter("idCita");
+                if (idCitaStr != null && !idCitaStr.isEmpty()) {
+                    int idCita = Integer.parseInt(idCitaStr);
+                    CitaEncomienda citaData = citaDAO.obtenerCitaPorId(idCita);
+                    if (citaData != null) {
+                        request.setAttribute("citaData", citaData);
+                    }
+                }
+                request.setAttribute("listaViajes", viajeDAO.listarViajesProgramados());
+                request.setAttribute("mostrarForm", true);
+                request.setAttribute("listaEncomiendas", encomiendaDAO.listarEncomiendas());
+                request.setAttribute("listaCitas", citaDAO.listarCitas());
                 request.getRequestDispatcher("encomiendas.jsp").forward(request, response);
 
             } else if ("actualizarEstado".equals(accion)) {
@@ -95,6 +107,7 @@ public class EncomiendaServlet extends HttpServlet {
             } else {
                 request.setAttribute("listaEncomiendas", encomiendaDAO.listarEncomiendas());
                 request.setAttribute("listaCitas", citaDAO.listarCitas());
+                request.setAttribute("listaViajes", viajeDAO.listarViajesProgramados());
                 request.getRequestDispatcher("encomiendas.jsp").forward(request, response);
             }
 
@@ -110,8 +123,7 @@ public class EncomiendaServlet extends HttpServlet {
 
         String accion = request.getParameter("accion");
 
-        // ============================================================
-        // ACCIÓN PÚBLICA: agendarCita (desde landing page, sin autenticación)
+        // Accion publica: agendarCita (desde landing page, sin autenticacion)
         // ============================================================
         if ("agendarCita".equals(accion)) {
             String dni = request.getParameter("dni");
@@ -144,7 +156,7 @@ public class EncomiendaServlet extends HttpServlet {
                 int idGenerado = citaDAO.insertarCita(cita, dni, nombre, telefono);
 
                 if (idGenerado > 0) {
-                    System.out.println("====== [OK] CITA ENCOMIENDA #" + idGenerado + " AGENDADA ======");
+                    System.out.println("[OK] Cita encomienda #" + idGenerado + " agendada");
                     response.sendRedirect("index.jsp?cita=success");
                 } else {
                     response.sendRedirect("index.jsp?cita=error");
@@ -156,8 +168,7 @@ public class EncomiendaServlet extends HttpServlet {
             return;
         }
 
-        // ============================================================
-        // ACCIONES DE ADMIN/VENDEDOR (requieren autenticación)
+        // Acciones de admin/vendedor (requieren autenticacion)
         // ============================================================
         HttpSession sess = request.getSession(false);
         Usuario user = (sess != null) ? (Usuario) sess.getAttribute("usuarioSesion") : null;

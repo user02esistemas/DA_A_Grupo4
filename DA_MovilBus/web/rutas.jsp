@@ -1,7 +1,4 @@
-<%-- 
-    Document   : rutas
-    CRUD completo para gestionar rutas comerciales de MovilBus
---%>
+<%-- CRUD completo para gestionar rutas comerciales de MovilBus --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
 <%@page import="dao.RutaDAO, dao.CiudadDAO, model.Usuario, java.util.List, java.util.Map"%>
@@ -12,7 +9,7 @@
     request.setAttribute("listaCiudades", ciudadDAO.listarActivas());
 %>
 <%
-    // 🔒 CONTROL DE ACCESO: Solo ADMINISTRADOR puede gestionar rutas
+    // Control de acceso: solo ADMINISTRADOR puede gestionar rutas
     Usuario userRut = (Usuario) session.getAttribute("usuarioSesion");
     if (userRut == null) {
         response.sendRedirect("login.jsp");
