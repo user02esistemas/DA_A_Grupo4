@@ -1,5 +1,0 @@
-# CONFIGURACIÓN DE EJEMPLO PARA MOVILBUSDB - COPIAR Y RENOMBRAR A "database.properties"
-db.server=localhost
-db.name=MovilBusDB
-db.user=tu_usuario_sql
-db.password=tu_contrasena_sql

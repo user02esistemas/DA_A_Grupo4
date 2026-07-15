@@ -54,6 +54,10 @@ public class AsientoLayoutUtil {
             llenarPiso4Columnas(lista, 2, 48, 1, 48, 1, 13);
         } else if (idServicio == 1 && capacidad == 32 && pisos == 1) {
             llenarPiso4Columnas(lista, 1, 32, 1, 8, 2, 1);
+        } else if (idServicio == 1 && capacidad == 32 && pisos == 2) {
+            // EJECUTIVO VIP 32/2: P1=12 (4 cols, Cama Vip 160°), P2=20 (4 cols, Regular 140°)
+            llenarPiso4Columnas(lista, 1, 12, 2, 12, 2, 1);
+            llenarPiso4Columnas(lista, 2, 20, 1, 20, 1, 13);
         } else if (pisos == 1 && (idServicio == 2 || idServicio == 3)) {
             llenarPiso3Columnas(lista, 1, capacidad, idServicio == 2 ? 2 : 2, 7.00, 1);
         } else if (pisos == 2 && (idServicio == 2 || idServicio == 3)) {
@@ -71,17 +75,19 @@ public class AsientoLayoutUtil {
     /** Retorna 3 para Presidencial/Premier o pisos con 3 cols; 4 para Ejecutivo VIP estándar */
     public static int obtenerColumnasGrid(String nombreServicio, int capacidad, int pisos) {
         if ("EJECUTIVO VIP".equalsIgnoreCase(nombreServicio)) {
-            if (capacidad == 60 && pisos == 2) return 4; // piso 2 usa 4 cols; piso 1 usa 3
+            if ((capacidad == 60 || capacidad == 32) && pisos == 2) return 4; // piso 2 usa 4 cols
             return 4;
         }
         return 3;
     }
 
     public static int obtenerColumnasGridPiso(String nombreServicio, int capacidad, int pisos, int piso) {
-        if ("EJECUTIVO VIP".equalsIgnoreCase(nombreServicio) && capacidad == 60 && pisos == 2 && piso == 1) {
-            return 3;
+        if ("EJECUTIVO VIP".equalsIgnoreCase(nombreServicio)) {
+            if (capacidad == 60 && pisos == 2 && piso == 1) return 3;
+            if (capacidad == 32 && pisos == 2 && piso == 1) return 4; // 32/2: P1 también usa 4 cols
+            return 4;
         }
-        return obtenerColumnasGrid(nombreServicio, capacidad, pisos);
+        return 3;
     }
 
     private static void llenarPiso3Columnas(List<PlantillaAsiento> lista, int piso, int cantidad,

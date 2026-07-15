@@ -306,4 +306,226 @@ public class ViajeDAO {
     public List<Asiento> generarCroquisDinamico(int idViaje) {
         return generarCroquisDesdeBD(idViaje);
     }
+
+    /**
+     * Lista todas las ventas (pasajes emitidos) con detalles completos
+     * para el historial de ventas. Incluye datos del pasajero, viaje, bus, asiento y pago.
+     */
+    /**
+     * Obtiene los detalles completos de UNA venta específica por su ID.
+     * Se usa en la pantalla de confirmación post-compra.
+     */
+    public Map<String, Object> obtenerVentaPorId(int idPasaje) {
+        String sql = "SELECT p.id_pasaje, p.fecha_emision, p.precio_pagado, p.estado AS estado_pasaje, " +
+                     "c.dni AS dni_cliente, c.nombre AS nombre_cliente, c.apellido AS apellido_cliente, " +
+                     "v.id_viaje, v.fecha_hora_salida, v.fecha_hora_llegada_estimada, " +
+                     "o.nombre AS origen, d.nombre AS destino, " +
+                     "b.placa, b.marca, b.modelo, s.nombre_servicio, " +
+                     "ba.numero_asiento, ba.piso, ta.descripcion AS tipo_asiento, r.precio_base " +
+                     "FROM Pasaje p " +
+                     "INNER JOIN Viaje v ON p.id_viaje = v.id_viaje " +
+                     "INNER JOIN Ruta r ON v.id_ruta = r.id_ruta " +
+                     "INNER JOIN Ciudades o ON r.id_origen = o.id_ciudad " +
+                     "INNER JOIN Ciudades d ON r.id_destino = d.id_ciudad " +
+                     "INNER JOIN Bus b ON v.id_bus = b.id_bus " +
+                     "INNER JOIN Servicio s ON b.id_servicio = s.id_servicio " +
+                     "INNER JOIN Cliente c ON p.id_cliente = c.id_cliente " +
+                     "INNER JOIN Bus_Asiento ba ON p.id_bus_asiento = ba.id_bus_asiento " +
+                     "INNER JOIN Tipo_Asiento ta ON ba.id_tipo_asiento = ta.id_tipo_asiento " +
+                     "WHERE p.id_pasaje = ?";
+
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idPasaje);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> venta = new HashMap<>();
+                    venta.put("idPasaje", rs.getInt("id_pasaje"));
+                    venta.put("fechaEmision", rs.getTimestamp("fecha_emision"));
+                    venta.put("precioPagado", rs.getDouble("precio_pagado"));
+                    venta.put("estadoPasaje", rs.getString("estado_pasaje"));
+                    venta.put("dniCliente", rs.getString("dni_cliente"));
+                    venta.put("nombreCliente", rs.getString("nombre_cliente"));
+                    venta.put("apellidoCliente", rs.getString("apellido_cliente"));
+                    venta.put("idViaje", rs.getInt("id_viaje"));
+                    venta.put("fechaHoraSalida", rs.getTimestamp("fecha_hora_salida"));
+                    venta.put("fechaHoraLlegada", rs.getTimestamp("fecha_hora_llegada_estimada"));
+                    venta.put("origen", rs.getString("origen"));
+                    venta.put("destino", rs.getString("destino"));
+                    venta.put("placa", rs.getString("placa"));
+                    venta.put("marca", rs.getString("marca"));
+                    venta.put("modelo", rs.getString("modelo"));
+                    venta.put("nombreServicio", rs.getString("nombre_servicio"));
+                    venta.put("numeroAsiento", rs.getInt("numero_asiento"));
+                    venta.put("piso", rs.getInt("piso"));
+                    venta.put("tipoAsiento", rs.getString("tipo_asiento"));
+                    venta.put("precioBase", rs.getDouble("precio_base"));
+                    return venta;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener venta por ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Obtiene los detalles de MULTIPLES ventas por sus IDs.
+     * Se usa en la pantalla de confirmación post-compra multi-asiento.
+     */
+    public List<Map<String, Object>> obtenerVentasPorIds(String idsConcatenados) {
+        List<Map<String, Object>> lista = new ArrayList<>();
+        if (idsConcatenados == null || idsConcatenados.trim().isEmpty()) return lista;
+        
+        // Validar que solo contenga dígitos y comas (seguridad anti-SQL injection)
+        if (!idsConcatenados.matches("\\d+(,\\d+)*")) {
+            System.err.println("IDs de pasajes inválidos: " + idsConcatenados);
+            return lista;
+        }
+
+        String sql = "SELECT p.id_pasaje, p.fecha_emision, p.precio_pagado, p.estado AS estado_pasaje, " +
+                     "c.dni AS dni_cliente, c.nombre AS nombre_cliente, c.apellido AS apellido_cliente, " +
+                     "v.id_viaje, v.fecha_hora_salida, v.fecha_hora_llegada_estimada, " +
+                     "o.nombre AS origen, d.nombre AS destino, " +
+                     "b.placa, b.marca, b.modelo, s.nombre_servicio, " +
+                     "ba.numero_asiento, ba.piso, ta.descripcion AS tipo_asiento, r.precio_base " +
+                     "FROM Pasaje p " +
+                     "INNER JOIN Viaje v ON p.id_viaje = v.id_viaje " +
+                     "INNER JOIN Ruta r ON v.id_ruta = r.id_ruta " +
+                     "INNER JOIN Ciudades o ON r.id_origen = o.id_ciudad " +
+                     "INNER JOIN Ciudades d ON r.id_destino = d.id_ciudad " +
+                     "INNER JOIN Bus b ON v.id_bus = b.id_bus " +
+                     "INNER JOIN Servicio s ON b.id_servicio = s.id_servicio " +
+                     "INNER JOIN Cliente c ON p.id_cliente = c.id_cliente " +
+                     "INNER JOIN Bus_Asiento ba ON p.id_bus_asiento = ba.id_bus_asiento " +
+                     "INNER JOIN Tipo_Asiento ta ON ba.id_tipo_asiento = ta.id_tipo_asiento " +
+                     "WHERE p.id_pasaje IN (" + idsConcatenados + ") " +
+                     "ORDER BY p.id_pasaje ASC";
+
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> venta = new HashMap<>();
+                venta.put("idPasaje", rs.getInt("id_pasaje"));
+                venta.put("fechaEmision", rs.getTimestamp("fecha_emision"));
+                venta.put("precioPagado", rs.getDouble("precio_pagado"));
+                venta.put("estadoPasaje", rs.getString("estado_pasaje"));
+                venta.put("dniCliente", rs.getString("dni_cliente"));
+                venta.put("nombreCliente", rs.getString("nombre_cliente"));
+                venta.put("apellidoCliente", rs.getString("apellido_cliente"));
+                venta.put("idViaje", rs.getInt("id_viaje"));
+                venta.put("fechaHoraSalida", rs.getTimestamp("fecha_hora_salida"));
+                venta.put("fechaHoraLlegada", rs.getTimestamp("fecha_hora_llegada_estimada"));
+                venta.put("origen", rs.getString("origen"));
+                venta.put("destino", rs.getString("destino"));
+                venta.put("placa", rs.getString("placa"));
+                venta.put("marca", rs.getString("marca"));
+                venta.put("modelo", rs.getString("modelo"));
+                venta.put("nombreServicio", rs.getString("nombre_servicio"));
+                venta.put("numeroAsiento", rs.getInt("numero_asiento"));
+                venta.put("piso", rs.getInt("piso"));
+                venta.put("tipoAsiento", rs.getString("tipo_asiento"));
+                venta.put("precioBase", rs.getDouble("precio_base"));
+                lista.add(venta);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener ventas por IDs: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    /**
+     * Lista TODAS las ventas (acceso solo para ADMINISTRADOR).
+     */
+    public List<Map<String, Object>> listarVentas() {
+        return ejecutarListadoVentas("", null);
+    }
+
+    /**
+     * Lista ventas realizadas por un VENDEDOR específico.
+     */
+    public List<Map<String, Object>> listarVentasPorVendedor(int idUsuario) {
+        String whereExtra = "AND pg.id_vendedor = ?";
+        return ejecutarListadoVentas(whereExtra, ps -> ps.setInt(1, idUsuario));
+    }
+
+    /**
+     * Lista ventas compradas por un CLIENTE (filtra por DNI del cliente asociado al usuario).
+     * El username del cliente es su DNI, que coincide con Cliente.dni.
+     */
+    public List<Map<String, Object>> listarVentasPorCliente(String dniCliente) {
+        String whereExtra = "AND c.dni = ?";
+        return ejecutarListadoVentas(whereExtra, ps -> ps.setString(1, dniCliente));
+    }
+
+    /**
+     * Método interno reutilizable para ejecutar consultas de listado de ventas
+     * con filtros adicionales.
+     */
+    @FunctionalInterface
+    private interface ParamSetter {
+        void set(PreparedStatement ps) throws SQLException;
+    }
+
+    private List<Map<String, Object>> ejecutarListadoVentas(String whereExtra, ParamSetter paramSetter) {
+        List<Map<String, Object>> lista = new ArrayList<>();
+        String sql = "SELECT p.id_pasaje, p.fecha_emision, p.precio_pagado, p.estado AS estado_pasaje, " +
+                     "c.dni AS dni_cliente, c.nombre AS nombre_cliente, c.apellido AS apellido_cliente, " +
+                     "v.id_viaje, v.fecha_hora_salida, " +
+                     "o.nombre AS origen, d.nombre AS destino, " +
+                     "b.placa, s.nombre_servicio, " +
+                     "ba.numero_asiento, ba.piso, ta.descripcion AS tipo_asiento, " +
+                     "pg.monto_total, pg.metodo_pago, pg.fecha_pago, pg.numero_operacion, " +
+                     "u.username AS vendedor " +
+                     "FROM Pasaje p " +
+                     "INNER JOIN Viaje v ON p.id_viaje = v.id_viaje " +
+                     "INNER JOIN Ruta r ON v.id_ruta = r.id_ruta " +
+                     "INNER JOIN Ciudades o ON r.id_origen = o.id_ciudad " +
+                     "INNER JOIN Ciudades d ON r.id_destino = d.id_ciudad " +
+                     "INNER JOIN Bus b ON v.id_bus = b.id_bus " +
+                     "INNER JOIN Servicio s ON b.id_servicio = s.id_servicio " +
+                     "INNER JOIN Cliente c ON p.id_cliente = c.id_cliente " +
+                     "INNER JOIN Bus_Asiento ba ON p.id_bus_asiento = ba.id_bus_asiento " +
+                     "INNER JOIN Tipo_Asiento ta ON ba.id_tipo_asiento = ta.id_tipo_asiento " +
+                     "LEFT JOIN Pago pg ON p.id_pasaje = pg.id_pasaje " +
+                     "LEFT JOIN Usuarios u ON pg.id_vendedor = u.id_usuario " +
+                     "WHERE 1=1 " + whereExtra + " " +
+                     "ORDER BY p.fecha_emision DESC";
+
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            if (paramSetter != null) paramSetter.set(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> venta = new HashMap<>();
+                    venta.put("idPasaje", rs.getInt("id_pasaje"));
+                    venta.put("fechaEmision", rs.getTimestamp("fecha_emision"));
+                    venta.put("precioPagado", rs.getDouble("precio_pagado"));
+                    venta.put("estadoPasaje", rs.getString("estado_pasaje"));
+                    venta.put("dniCliente", rs.getString("dni_cliente"));
+                    venta.put("nombreCliente", rs.getString("nombre_cliente"));
+                    venta.put("apellidoCliente", rs.getString("apellido_cliente"));
+                    venta.put("idViaje", rs.getInt("id_viaje"));
+                    venta.put("fechaHoraSalida", rs.getTimestamp("fecha_hora_salida"));
+                    venta.put("origen", rs.getString("origen"));
+                    venta.put("destino", rs.getString("destino"));
+                    venta.put("placa", rs.getString("placa"));
+                    venta.put("nombreServicio", rs.getString("nombre_servicio"));
+                    venta.put("numeroAsiento", rs.getInt("numero_asiento"));
+                    venta.put("piso", rs.getInt("piso"));
+                    venta.put("tipoAsiento", rs.getString("tipo_asiento"));
+                    venta.put("montoTotal", rs.getDouble("monto_total"));
+                    venta.put("metodoPago", rs.getString("metodo_pago"));
+                    venta.put("fechaPago", rs.getTimestamp("fecha_pago"));
+                    venta.put("numeroOperacion", rs.getString("numero_operacion"));
+                    venta.put("vendedor", rs.getString("vendedor"));
+                    lista.add(venta);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al listar ventas: " + e.getMessage());
+        }
+        return lista;
+    }
 }

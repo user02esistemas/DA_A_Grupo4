@@ -14,7 +14,7 @@ import java.io.IOException;
 import model.Usuario;
 
 @WebFilter(filterName = "AuthFilter", urlPatterns = {
-    "/dashboard.jsp", "/buses.jsp", "/viajes.jsp", "/ventas.jsp",
+    "/dashboard.jsp", "/buses.jsp", "/viajes.jsp", "/historial-ventas.jsp",
     "/conductores.jsp", "/ciudades.jsp", "/rutas.jsp"
 })
 public class AuthFilter implements Filter {
@@ -32,10 +32,25 @@ public class AuthFilter implements Filter {
         Usuario usuario = (session != null) ? (Usuario) session.getAttribute("usuarioSesion") : null;
 
         if (usuario == null) {
-            httpResponse.sendRedirect("login.jsp");
-        } else {
-            chain.doFilter(request, response);
+            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login.jsp");
+            return;
         }
+
+        String rol = usuario.getRol();
+
+        // CLIENTE_WEB no accede a páginas admin
+        if ("CLIENTE_WEB".equalsIgnoreCase(rol)) {
+            httpResponse.sendRedirect(httpRequest.getContextPath() + "/index.jsp");
+            return;
+        }
+
+        // VENDEDOR y ADMINISTRADOR tienen acceso
+        if ("VENDEDOR".equalsIgnoreCase(rol) || "ADMINISTRADOR".equalsIgnoreCase(rol)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        httpResponse.sendRedirect(httpRequest.getContextPath() + "/login.jsp");
     }
 
     @Override

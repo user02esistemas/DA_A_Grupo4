@@ -38,8 +38,8 @@ public class LoginServlet extends HttpServlet {
                 // Redirigir al panel administrativo interno de la empresa
                 response.sendRedirect("dashboard.jsp");
             } else {
-                // Redirigir a la landing page pública de compra para clientes
-                response.sendRedirect("ventas.jsp");
+                // Redirigir a la landing page principal para clientes (con su nombre)
+                response.sendRedirect("index.jsp");
             }
         } else {
             // Si falla, lo devolvemos al login enviando un mensaje de error legible
