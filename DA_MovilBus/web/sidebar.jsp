@@ -20,6 +20,9 @@
             <a class="nav-link <%= "conductores".equals(active) ? "active" : "" %>" href="conductores.jsp">
                 <i class="bi bi-people"></i> Conductores
             </a>
+            <a class="nav-link <%= "vendedores".equals(active) ? "active" : "" %>" href="vendedores.jsp">
+                <i class="bi bi-person-badge"></i> Vendedores
+            </a>
             <a class="nav-link <%= "buses".equals(active) ? "active" : "" %>" href="buses.jsp">
                 <i class="bi bi-truck"></i> Buses
             </a>

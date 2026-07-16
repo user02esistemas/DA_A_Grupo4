@@ -115,8 +115,9 @@
                             
                             <div class="row g-2">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label"><i class="bi bi-telephone me-1 text-muted"></i>Teléfono</label>
-                                    <input type="tel" name="telefono" class="form-control" placeholder="999 888 777">
+                                    <label class="form-label"><i class="bi bi-telephone me-1 text-muted"></i>Teléfono <span class="text-muted small">(opcional)</span></label>
+                                    <input type="tel" name="telefono" class="form-control" maxlength="9" pattern="[0-9\s]{7,15}" placeholder="999888777" inputmode="numeric">
+                                    <div class="form-text small">9 dígitos, ejemplo: 999888777</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-envelope me-1 text-muted"></i>Correo Electrónico <span class="text-danger">*</span></label>
@@ -178,12 +179,39 @@
     <script>
         function validarFormulario() {
             const dni = document.querySelector('input[name="dni"]');
+            const telefono = document.querySelector('input[name="telefono"]');
             const password = document.querySelector('input[name="password"]');
+            const nombre = document.querySelector('input[name="nombre"]');
+            const apellido = document.querySelector('input[name="apellido"]');
+            
             if (dni.value.length !== 8 || isNaN(dni.value)) {
                 alert('El DNI debe tener 8 dígitos numéricos.');
                 dni.focus();
                 return false;
             }
+            
+            if (nombre.value.trim().length < 2) {
+                alert('El nombre debe tener al menos 2 caracteres.');
+                nombre.focus();
+                return false;
+            }
+            
+            if (apellido.value.trim().length < 2) {
+                alert('El apellido debe tener al menos 2 caracteres.');
+                apellido.focus();
+                return false;
+            }
+            
+            // Validar teléfono si se ingresó (solo dígitos y espacios)
+            if (telefono.value.trim() !== '') {
+                const telLimpio = telefono.value.replace(/\s+/g, '');
+                if (telLimpio.length < 7 || telLimpio.length > 15 || isNaN(telLimpio)) {
+                    alert('El teléfono debe contener solo dígitos (7-15 caracteres).');
+                    telefono.focus();
+                    return false;
+                }
+            }
+            
             if (password.value.length < 6) {
                 alert('La contraseña debe tener al menos 6 caracteres.');
                 password.focus();
@@ -191,6 +219,19 @@
             }
             return true;
         }
+        
+        // Permitir solo dígitos en el campo DNI
+        document.addEventListener('DOMContentLoaded', function() {
+            const dniInput = document.querySelector('input[name="dni"]');
+            dniInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/\D/g, '');
+            });
+            
+            const telInput = document.querySelector('input[name="telefono"]');
+            telInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9\s]/g, '');
+            });
+        });
     </script>
 </body>
 </html>

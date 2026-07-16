@@ -223,6 +223,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Validar formato de placa en tiempo real
+        document.querySelector('input[name="placa"]').addEventListener('input', function() {
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+            if (this.value.length === 3 && !this.value.includes('-')) {
+                this.value = this.value + '-';
+            }
+            if (this.value.length > 7) {
+                this.value = this.value.slice(0, 7);
+            }
+        });
+
         setTimeout(function() {
             document.querySelectorAll('.alert').forEach(a => {
                 var bsAlert = new bootstrap.Alert(a);

@@ -96,5 +96,26 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validar formulario de login antes de enviar
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (username.length < 3) {
+                e.preventDefault();
+                alert('⚠️ Por favor, ingresa tu usuario (DNI o código).');
+                document.getElementById('username').focus();
+                return;
+            }
+            
+            if (password.length < 3) {
+                e.preventDefault();
+                alert('⚠️ Por favor, ingresa tu contraseña.');
+                document.getElementById('password').focus();
+                return;
+            }
+        });
+    </script>
 </body>
 </html>

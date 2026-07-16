@@ -4,6 +4,7 @@ import dao.ClienteDAO;
 import dao.UsuarioDAO;
 import model.Cliente;
 import model.Usuario;
+import util.ValidacionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet(name = "ClienteServlet", urlPatterns = {"/ClienteServlet"})
 public class ClienteServlet extends HttpServlet {
@@ -31,6 +33,24 @@ public class ClienteServlet extends HttpServlet {
             String telefono = request.getParameter("telefono");
             String email = request.getParameter("email");
             String password = request.getParameter("password");
+
+            // Validar DNI (requerido y formato)
+            if (!ValidacionUtil.validarDNI(dni)) {
+                response.sendRedirect("registro-cliente.jsp?status=error");
+                return;
+            }
+
+            // Validar teléfono si se proporcionó
+            if (telefono != null && !telefono.trim().isEmpty() && !ValidacionUtil.validarTelefonoFlexible(telefono)) {
+                response.sendRedirect("registro-cliente.jsp?status=error");
+                return;
+            }
+
+            // Validar password
+            if (password == null || password.length() < 6) {
+                response.sendRedirect("registro-cliente.jsp?status=error");
+                return;
+            }
 
             // Instanciar modelos
             Usuario nuevoUsuario = new Usuario();

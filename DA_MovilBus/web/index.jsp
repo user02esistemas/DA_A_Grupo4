@@ -1162,8 +1162,8 @@
                                     <input type="text" name="nombre" class="form-control" placeholder="Nombres y Apellidos" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small">Teléfono</label>
-                                    <input type="tel" name="telefono" class="form-control" placeholder="999 888 777">
+                                    <label class="form-label small">Teléfono <span class="text-muted">(opcional)</span></label>
+                                    <input type="tel" name="telefono" class="form-control" maxlength="15" pattern="[0-9\s]{7,15}" placeholder="999888777" inputmode="numeric">
                                 </div>
                             </div>
                         </div>
@@ -1324,6 +1324,41 @@
                 navbar.classList.add('scrolled');
             } else {
                 navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Validación de campos numéricos en el modal de cita
+        document.addEventListener('DOMContentLoaded', function() {
+            const dniCita = document.querySelector('#modalCitaEncomienda input[name="dni"]');
+            if (dniCita) {
+                dniCita.addEventListener('input', function() {
+                    this.value = this.value.replace(/\D/g, '');
+                });
+            }
+
+            const telCita = document.querySelector('#modalCitaEncomienda input[name="telefono"]');
+            if (telCita) {
+                telCita.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9\s]/g, '');
+                });
+            }
+
+            const formCita = document.getElementById('formCitaEncomienda');
+            if (formCita) {
+                formCita.addEventListener('submit', function(e) {
+                    const dni = this.querySelector('input[name="dni"]').value.replace(/\s+/g, '');
+                    if (dni.length !== 8 || isNaN(dni)) {
+                        e.preventDefault();
+                        alert('⚠️ El DNI debe tener exactamente 8 dígitos numéricos.');
+                        return;
+                    }
+                    const tel = this.querySelector('input[name="telefono"]').value.trim();
+                    if (tel !== '' && tel.replace(/\s+/g, '').length < 7) {
+                        e.preventDefault();
+                        alert('⚠️ El teléfono debe tener al menos 7 dígitos (si se ingresa).');
+                        return;
+                    }
+                });
             }
         });
 

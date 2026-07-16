@@ -544,6 +544,13 @@
         function ocultarFormulario() {
             document.getElementById('formEncomienda').style.display = 'none';
         }
+
+        // Validar DNIs en el formulario de encomienda
+        document.querySelectorAll('input[name="dniRemitente"], input[name="dniDestinatario"]').forEach(function(input) {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+            });
+        });
     </script>
 </body>
 </html>

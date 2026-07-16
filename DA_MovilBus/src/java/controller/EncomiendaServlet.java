@@ -6,6 +6,7 @@ import dao.ViajeDAO;
 import model.CitaEncomienda;
 import model.Encomienda;
 import model.Usuario;
+import util.ValidacionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -143,6 +144,24 @@ public class EncomiendaServlet extends HttpServlet {
                 return;
             }
 
+            // Validar DNI
+            if (!ValidacionUtil.validarDNI(dni)) {
+                response.sendRedirect("index.jsp?cita=error");
+                return;
+            }
+
+            // Validar teléfono si se proporcionó
+            if (telefono != null && !telefono.trim().isEmpty() && !ValidacionUtil.validarTelefonoFlexible(telefono)) {
+                response.sendRedirect("index.jsp?cita=error");
+                return;
+            }
+
+            // Validar peso
+            if (pesoStr != null && !pesoStr.isEmpty() && !ValidacionUtil.validarDecimalPositivo(pesoStr)) {
+                response.sendRedirect("index.jsp?cita=error");
+                return;
+            }
+
             try {
                 CitaEncomienda cita = new CitaEncomienda();
                 cita.setIdOrigen(Integer.parseInt(idOrigenStr));
@@ -195,8 +214,21 @@ public class EncomiendaServlet extends HttpServlet {
                 return;
             }
 
+            // Validar DNIs de remitente y destinatario
+            if (!ValidacionUtil.validarDNI(dniRemitente) || !ValidacionUtil.validarDNI(dniDestinatario)) {
+                response.sendRedirect("EncomiendaServlet?accion=nuevo&status=error");
+                return;
+            }
+
             try {
                 int idViaje = Integer.parseInt(idViajeStr);
+                
+                // Validar peso y precio como números positivos
+                if (!ValidacionUtil.validarDecimalPositivo(pesoStr) || !ValidacionUtil.validarDecimalPositivo(precioStr)) {
+                    response.sendRedirect("EncomiendaServlet?accion=nuevo&status=error");
+                    return;
+                }
+                
                 double pesoKg = Double.parseDouble(pesoStr);
                 double precioEnvio = Double.parseDouble(precioStr);
 

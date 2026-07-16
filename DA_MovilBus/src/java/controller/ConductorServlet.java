@@ -2,6 +2,7 @@ package controller;
 
 import dao.ConductorDAO;
 import model.Conductor;
+import util.ValidacionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -26,8 +27,14 @@ public class ConductorServlet extends HttpServlet {
         try {
             switch (accion) {
                 case "crear" -> {
+                    String dni = request.getParameter("dni");
+                    if (!ValidacionUtil.validarDNI(dni)) {
+                        session.setAttribute("msgError", "El DNI debe tener exactamente 8 dígitos numéricos.");
+                        response.sendRedirect("conductores.jsp");
+                        return;
+                    }
                     Conductor c = new Conductor();
-                    c.setDni(request.getParameter("dni"));
+                    c.setDni(dni);
                     c.setNombre(request.getParameter("nombre"));
                     c.setApellido(request.getParameter("apellido"));
                     c.setNroLicencia(request.getParameter("nroLicencia"));
@@ -39,9 +46,15 @@ public class ConductorServlet extends HttpServlet {
                     }
                 }
                 case "actualizar" -> {
+                    String dni = request.getParameter("dni");
+                    if (!ValidacionUtil.validarDNI(dni)) {
+                        session.setAttribute("msgError", "El DNI debe tener exactamente 8 dígitos numéricos.");
+                        response.sendRedirect("conductores.jsp");
+                        return;
+                    }
                     Conductor c = new Conductor();
                     c.setIdConductor(Integer.parseInt(request.getParameter("idConductor")));
-                    c.setDni(request.getParameter("dni"));
+                    c.setDni(dni);
                     c.setNombre(request.getParameter("nombre"));
                     c.setApellido(request.getParameter("apellido"));
                     c.setNroLicencia(request.getParameter("nroLicencia"));

@@ -2,6 +2,7 @@ package controller;
 
 import dao.BusDAO;
 import model.Bus;
+import util.ValidacionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -26,12 +27,37 @@ public class BusServlet extends HttpServlet {
         try {
             switch (accion) {
                 case "crear" -> {
+                    String placa = request.getParameter("placa");
+                    String capacidadStr = request.getParameter("capacidad");
+                    String pisosStr = request.getParameter("pisos");
+
+                    // Validar placa (formato XXX-999)
+                    if (!ValidacionUtil.validarPlacaBus(placa)) {
+                        session.setAttribute("msgError", "La placa debe tener formato XXX-999 (ej: ABC-123).");
+                        response.sendRedirect("buses.jsp");
+                        return;
+                    }
+
+                    // Validar capacidad (mínimo 10, máximo 80 asientos)
+                    if (!ValidacionUtil.validarEntero(capacidadStr, 10, 80)) {
+                        session.setAttribute("msgError", "La capacidad debe ser un número entre 10 y 80.");
+                        response.sendRedirect("buses.jsp");
+                        return;
+                    }
+
+                    // Validar pisos (1 o 2)
+                    if (!ValidacionUtil.validarEntero(pisosStr, 1, 2)) {
+                        session.setAttribute("msgError", "La cantidad de pisos debe ser 1 o 2.");
+                        response.sendRedirect("buses.jsp");
+                        return;
+                    }
+
                     Bus nuevoBus = new Bus(
-                        request.getParameter("placa"),
+                        placa,
                         request.getParameter("marca"),
                         request.getParameter("modelo"),
-                        Integer.parseInt(request.getParameter("capacidad")),
-                        Integer.parseInt(request.getParameter("pisos")),
+                        Integer.parseInt(capacidadStr),
+                        Integer.parseInt(pisosStr),
                         "ACTIVO",
                         Integer.parseInt(request.getParameter("idServicio"))
                     );
@@ -42,9 +68,15 @@ public class BusServlet extends HttpServlet {
                     }
                 }
                 case "actualizar" -> {
+                    String placa = request.getParameter("placa");
+                    if (!ValidacionUtil.validarPlacaBus(placa)) {
+                        session.setAttribute("msgError", "La placa debe tener formato XXX-999 (ej: ABC-123).");
+                        response.sendRedirect("buses.jsp");
+                        return;
+                    }
                     Bus bus = new Bus();
                     bus.setIdBus(Integer.parseInt(request.getParameter("idBus")));
-                    bus.setPlaca(request.getParameter("placa"));
+                    bus.setPlaca(placa);
                     bus.setMarca(request.getParameter("marca"));
                     bus.setModelo(request.getParameter("modelo"));
                     bus.setEstado(request.getParameter("estado"));

@@ -81,6 +81,22 @@
                             </div>
                         </div>
 
+                        <!-- Vendedores -->
+                        <div class="col-xl-4 col-md-6">
+                            <div class="card card-modulo shadow-sm h-100 border-start border-4 border-warning">
+                                <div class="card-body">
+                                    <div class="icon-wrapper bg-warning bg-opacity-10 text-warning">
+                                        <i class="bi bi-person-badge"></i>
+                                    </div>
+                                    <h5 class="card-title">Vendedores</h5>
+                                    <p class="card-text">Registra y administra al personal de ventas de la empresa.</p>
+                                    <a href="vendedores.jsp" class="btn btn-outline-warning btn-modulo">
+                                        <i class="bi bi-arrow-right me-1"></i> Ir al Módulo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Buses -->
                         <div class="col-xl-4 col-md-6">
                             <div class="card card-modulo shadow-sm h-100 border-start border-4 border-success">

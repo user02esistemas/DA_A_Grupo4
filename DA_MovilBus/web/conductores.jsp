@@ -244,6 +244,39 @@
             modal.show();
         }
 
+        // Validación del formulario de conductor
+        document.getElementById('formConductor').addEventListener('submit', function(e) {
+            const dni = document.getElementById('dni').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            const apellido = document.getElementById('apellido').value.trim();
+
+            if (dni.length !== 8 || isNaN(dni)) {
+                e.preventDefault();
+                alert('⚠️ El DNI debe tener exactamente 8 dígitos numéricos.');
+                document.getElementById('dni').focus();
+                return;
+            }
+
+            if (nombre.length < 2) {
+                e.preventDefault();
+                alert('⚠️ El nombre debe tener al menos 2 caracteres.');
+                document.getElementById('nombre').focus();
+                return;
+            }
+
+            if (apellido.length < 2) {
+                e.preventDefault();
+                alert('⚠️ El apellido debe tener al menos 2 caracteres.');
+                document.getElementById('apellido').focus();
+                return;
+            }
+        });
+
+        // Permitir solo dígitos en el DNI
+        document.getElementById('dni').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
         // Auto-dismiss alerts after 5 seconds
         setTimeout(function() {
             document.querySelectorAll('.alert').forEach(a => {

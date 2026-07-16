@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import model.Usuario;
+import util.ValidacionUtil;
 
 @WebServlet(name = "VentaServlet", urlPatterns = {"/VentaServlet"})
 public class VentaServlet extends HttpServlet {
@@ -159,6 +160,18 @@ public class VentaServlet extends HttpServlet {
             return;
         }
 
+        // Validar DNI del pasajero
+        if (dni == null || !ValidacionUtil.validarDNI(dni)) {
+            response.sendRedirect(baseRedirect + "&status=error");
+            return;
+        }
+
+        // Validar precio positivo
+        if (precioBoleto != null && !ValidacionUtil.validarDecimalPositivo(precioBoleto.replace("S/.", "").trim())) {
+            response.sendRedirect(baseRedirect + "&status=error");
+            return;
+        }
+
         int idViaje = Integer.parseInt(idViajeParam);
         int numAsiento = Integer.parseInt(numAsientoParam);
         double precioFinal = precioBoleto != null ? Double.parseDouble(precioBoleto.replace("S/.", "").trim()) : 0.0;
@@ -229,9 +242,21 @@ public class VentaServlet extends HttpServlet {
             try {
                 for (int i = 0; i < asientos.length; i++) {
                     int numAsiento = Integer.parseInt(asientos[i]);
-                    double precioFinal = (precios != null && i < precios.length) 
-                        ? Double.parseDouble(precios[i].replace("S/.", "").trim()) : 0.0;
+                    
+                    // Validar precio positivo
+                    String precioStr = (precios != null && i < precios.length) ? precios[i].replace("S/.", "").trim() : null;
+                    if (!ValidacionUtil.validarDecimalPositivo(precioStr)) {
+                        throw new SQLException("Precio inválido para pasajero " + (i+1));
+                    }
+                    double precioFinal = Double.parseDouble(precioStr);
+                    
                     String dni = (dnis != null && i < dnis.length) ? dnis[i] : "00000000";
+                    
+                    // Validar DNI de cada pasajero (permitir 00000000 para casos especiales de sistema)
+                    if (dni != null && !dni.equals("00000000") && !ValidacionUtil.validarDNI(dni)) {
+                        throw new SQLException("DNI inválido para pasajero " + (i+1) + ": " + dni);
+                    }
+                    
                     String nombrePasajero = (nombres != null && i < nombres.length) ? nombres[i] : "-";
                     
                     String[] nombreApellido = separarNombre(nombrePasajero);
