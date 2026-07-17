@@ -4,6 +4,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * @deprecated Usar {@link config.ConexionBD} en su lugar.
+ * Esta clase usa credenciales hardcodeadas (localhost:1433) 
+ * y no lee del archivo database.properties.
+ * Ningun DAO del sistema la utiliza actualmente.
+ */
+@Deprecated
 public class ConexionBD {
     
     private static ConexionBD instancia;

@@ -416,8 +416,9 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
+                                        <th>Codigo Seg.</th>
                                         <th>Fecha</th>
-                                        <th>Descripción</th>
+                                        <th>Descripcion</th>
                                         <th>Peso</th>
                                         <th>Remitente</th>
                                         <th>Destinatario</th>
@@ -425,13 +426,19 @@
                                         <th class="text-center">Costo</th>
                                         <th class="text-center">Estado</th>
                                         <th>Vendedor</th>
-                                        <th class="text-center">Acción</th>
+                                        <th class="text-center">Accion</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <c:forEach var="e" items="${listaEncomiendas}">
                                         <tr>
                                             <td><span class="fw-bold text-muted small">#${e.idEncomienda}</span></td>
+                                            <td>
+                                                <a href="EncomiendaServlet?accion=tracking&codigo=${e.codigoSeguimiento}" target="_blank" title="Ver tracking" class="text-decoration-none">
+                                                    <code class="small" style="font-size:.75rem;letter-spacing:1px;">${e.codigoSeguimiento}</code>
+                                                    <i class="bi bi-box-arrow-up-right ms-1" style="font-size:.65rem;"></i>
+                                                </a>
+                                            </td>
                                             <td><small>${e.fechaEnvio}</small></td>
                                             <td><span class="fw-semibold small">${e.descripcion}</span></td>
                                             <td><span class="badge bg-secondary">${e.pesoKg} kg</span></td>
@@ -442,23 +449,24 @@
                                             <td class="text-center">
                                                 <span class="badge ${e.estado == 'ENTREGADO' ? 'bg-success' : e.estado == 'EN VIAJE' ? 'bg-primary' : e.estado == 'ANULADO' ? 'bg-danger' : 'bg-secondary'} badge-estado">${e.estado}</span>
                                             </td>
-                                            <td><small class="text-muted">${e.vendedor != null ? e.vendedor : '—'}</small></td>
+                                            <td><small class="text-muted">${e.vendedor != null ? e.vendedor : '-'}</small></td>
                                             <td class="text-center">
                                                 <div class="dropdown">
                                                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown">
                                                         <i class="bi bi-gear me-1"></i>
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                        <li><a class="dropdown-item" href="EncomiendaServlet?accion=tracking&codigo=${e.codigoSeguimiento}" target="_blank"><i class="bi bi-eye text-primary me-2"></i>Ver Tracking</a></li>
+                                                        <li><hr class="dropdown-divider"></li>
                                                         <c:if test="${e.estado == 'REGISTRADO'}"><li><a class="dropdown-item" href="EncomiendaServlet?accion=actualizarEstado&idEncomienda=${e.idEncomienda}&estado=EN VIAJE"><i class="bi bi-truck text-primary me-2"></i>Marcar En Viaje</a></li></c:if>
                                                         <c:if test="${e.estado == 'EN VIAJE' or e.estado == 'REGISTRADO'}"><li><a class="dropdown-item" href="EncomiendaServlet?accion=actualizarEstado&idEncomienda=${e.idEncomienda}&estado=ENTREGADO"><i class="bi bi-check-circle text-success me-2"></i>Marcar Entregado</a></li></c:if>
-                                                        <c:if test="${e.estado != 'ENTREGADO' and e.estado != 'ANULADO'}"><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="EncomiendaServlet?accion=actualizarEstado&idEncomienda=${e.idEncomienda}&estado=ANULADO" onclick="return confirm('¿Anular encomienda #${e.idEncomienda}?')"><i class="bi bi-x-circle text-danger me-2"></i>Anular</a></li></c:if>
+                                                        <c:if test="${e.estado != 'ENTREGADO' and e.estado != 'ANULADO'}"><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="EncomiendaServlet?accion=actualizarEstado&idEncomienda=${e.idEncomienda}&estado=ANULADO" onclick="return confirm('Anular encomienda #${e.idEncomienda}?')"><i class="bi bi-x-circle text-danger me-2"></i>Anular</a></li></c:if>
                                                     </ul>
                                                 </div>
                                             </td>
                                         </tr>
-                                    </c:forEach>
-                                    <c:if test="${empty listaEncomiendas}">
-                                        <tr><td colspan="11"><div class="empty-state"><i class="bi bi-box-seam text-muted fs-1"></i><p class="mb-0">No se han registrado encomiendas aún.</p><button class="btn-empty-enc" onclick="mostrarFormulario()"><i class="bi bi-plus-circle me-2"></i> Registrar primera encomienda</button></div></td></tr>
+                                    </c:forEach>                                        <c:if test="${empty listaEncomiendas}">
+                                        <tr><td colspan="12"><div class="empty-state"><i class="bi bi-box-seam text-muted fs-1"></i><p class="mb-0">No se han registrado encomiendas aun.</p><button class="btn-empty-enc" onclick="mostrarFormulario()"><i class="bi bi-plus-circle me-2"></i> Registrar primera encomienda</button></div></td></tr>
                                     </c:if>
                                 </tbody>
                             </table>

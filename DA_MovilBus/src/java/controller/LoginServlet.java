@@ -17,14 +17,21 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // 1. Capturar parámetros del formulario web
+        // 1. Capturar parametros del formulario web
         String txtUser = request.getParameter("username");
         String txtPass = request.getParameter("password");
+        
+        // Validar que los campos no esten vacios
+        if (txtUser == null || txtPass == null || txtUser.trim().isEmpty() || txtPass.trim().isEmpty()) {
+            request.setAttribute("error", "Ingrese usuario y contrasena.");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+            return;
+        }
         
         UsuarioDAO usuarioDAO = new UsuarioDAO();
         
         // 2. Validar credenciales contra el DAO
-        Usuario usuarioLogueado = usuarioDAO.validarLogin(txtUser, txtPass);
+        Usuario usuarioLogueado = usuarioDAO.validarLogin(txtUser.trim(), txtPass);
         
         if (usuarioLogueado != null) {
             // 3. Crear o recuperar la sesión HTTP activa

@@ -27,6 +27,39 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/movilbus.css">
+    <style>
+        .pago-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: .6rem .3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            background: white;
+        }
+        .pago-option:hover {
+            border-color: var(--mvb-orange);
+            background: #FFF8E1;
+        }
+        .pago-option.active {
+            border-color: var(--mvb-orange);
+            background: #FFF3E0;
+            box-shadow: 0 0 0 3px rgba(255,107,0,.15);
+        }
+        .pago-option i {
+            font-size: 1.4rem;
+            display: block;
+            margin-bottom: 2px;
+            color: var(--mvb-orange);
+        }
+        .pago-option small {
+            font-size: .65rem;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+    </style>
 </head>
 <body class="admin-body">
     <div class="container-fluid">
@@ -64,9 +97,9 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 </c:if>
-                <c:if test="${param.status == 'error'}">
+                <c:if test="${param.status == 'error' or not empty errorMsg}">
                     <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i> <strong>Error al emitir el pasaje.</strong> Verifique los datos e intente nuevamente.
+                        <i class="bi bi-exclamation-triangle me-2"></i> <strong>${not empty errorMsg ? errorMsg : 'Error al emitir el pasaje. Verifique los datos e intente nuevamente.'}</strong>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 </c:if>
@@ -342,7 +375,83 @@
                                         <small class="text-white-50" id="totalCantidad">0 pasaje(s)</small>
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm" id="btnConfirmar" disabled>
+                                    <!-- Metodo de Pago -->
+                                    <div class="mb-3" id="metodoPagoGroup" style="display:none;">
+                                        <label class="form-label fw-bold"><i class="bi bi-credit-card me-1"></i>Metodo de Pago</label>
+                                        <input type="hidden" name="metodoPago" id="metodoPagoInput" value="EFECTIVO">
+                                        <div class="row g-2">
+                                            <div class="col-4">
+                                                <div class="pago-option active" data-metodo="EFECTIVO" onclick="seleccionarPago(this)">
+                                                    <i class="bi bi-cash"></i>
+                                                    <small>Efectivo</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="pago-option" data-metodo="YAPE" onclick="seleccionarPago(this)">
+                                                    <i class="bi bi-phone"></i>
+                                                    <small>Yape</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="pago-option" data-metodo="PLIN" onclick="seleccionarPago(this)">
+                                                    <i class="bi bi-phone"></i>
+                                                    <small>Plin</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="pago-option" data-metodo="TARJETA" onclick="seleccionarPago(this)">
+                                                    <i class="bi bi-credit-card-2-front"></i>
+                                                    <small>Tarjeta</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="pago-option" data-metodo="TRANSFERENCIA" onclick="seleccionarPago(this)">
+                                                    <i class="bi bi-bank"></i>
+                                                    <small>Transferencia</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- QR Yape/Plin (dinamico) -->
+                                        <div id="qrPagoMovil" style="display:none;" class="text-center mt-3 p-3 bg-light rounded-3">
+                                            <img id="qrImg" src="" alt="QR de pago" style="width:130px;height:130px;border-radius:12px;">
+                                            <div class="small text-muted mt-2">
+                                                <i class="bi bi-phone me-1"></i>
+                                                Escanea con tu app <strong id="qrLabel">Yape</strong> para pagar
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Formulario Tarjeta (simulado) -->
+                                        <div id="formTarjeta" style="display:none;" class="mt-3 p-3 bg-light rounded-3">
+                                            <div class="row g-2">
+                                                <div class="col-12">
+                                                    <label class="small">Numero de Tarjeta</label>
+                                                    <input type="text" class="form-control form-control-sm" placeholder="1234 5678 9012 3456" maxlength="19">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="small">Vencimiento</label>
+                                                    <input type="text" class="form-control form-control-sm" placeholder="MM/AA">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="small">CVV</label>
+                                                    <input type="text" class="form-control form-control-sm" placeholder="123" maxlength="4">
+                                                </div>
+                                            </div>
+                                            <div class="small text-muted mt-2">
+                                                <i class="bi bi-shield-lock me-1"></i>Pago seguro - Solo visible para el vendedor
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Transferencia -->
+                                        <div id="infoTransferencia" style="display:none;" class="mt-3 p-3 bg-light rounded-3 text-center small">
+                                            <i class="bi bi-bank2 me-1"></i>
+                                            <strong>Banco de la Nacion</strong><br>
+                                            Cuenta Corriente: <strong>123-456789-0-00</strong><br>
+                                            Titular: <strong>MovilBus S.A.C.</strong>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-ingresar btn-lg w-100 fw-bold rounded-pill shadow-sm" id="btnConfirmar" disabled>
                                         <i class="bi bi-ticket-check me-2"></i> Confirmar y Emitir Pasajes
                                     </button>
                                 </form>
@@ -474,7 +583,41 @@
         
         // Mostrar total y botón
         totalBox.style.display = 'block';
+        document.getElementById('metodoPagoGroup').style.display = 'block';
         btnConfirmar.disabled = false;
+    }
+    
+    function seleccionarPago(el) {
+        // Quitar active de todos
+        document.querySelectorAll('.pago-option').forEach(function(e) {
+            e.classList.remove('active');
+        });
+        el.classList.add('active');
+        
+        const metodo = el.getAttribute('data-metodo');
+        document.getElementById('metodoPagoInput').value = metodo;
+        
+        // Ocultar todos los detalles
+        document.getElementById('qrPagoMovil').style.display = 'none';
+        document.getElementById('formTarjeta').style.display = 'none';
+        document.getElementById('infoTransferencia').style.display = 'none';
+        
+        // Mostrar detalle segun metodo
+        if (metodo === 'YAPE' || metodo === 'PLIN') {
+            const qrDiv = document.getElementById('qrPagoMovil');
+            qrDiv.style.display = 'block';
+            const label = metodo === 'YAPE' ? 'Yape' : 'Plin';
+            document.getElementById('qrLabel').textContent = label;
+            // Generar QR con total actual via JS
+            const total = document.getElementById('totalFinal').textContent.trim();
+            const qrImg = document.getElementById('qrImg');
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MovilBus%20' 
+                + encodeURIComponent(label) + '%20-%20S/.' + encodeURIComponent(total);
+        } else if (metodo === 'TARJETA') {
+            document.getElementById('formTarjeta').style.display = 'block';
+        } else if (metodo === 'TRANSFERENCIA') {
+            document.getElementById('infoTransferencia').style.display = 'block';
+        }
     }
     </script>
 </body>

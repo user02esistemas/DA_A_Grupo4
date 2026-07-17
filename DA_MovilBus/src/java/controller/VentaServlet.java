@@ -1,5 +1,6 @@
 package controller;
 
+import dao.FidelizacionDAO;
 import dao.ViajeDAO;
 import config.ConexionBD;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,7 @@ import util.ValidacionUtil;
 public class VentaServlet extends HttpServlet {
 
     private ViajeDAO viajeDAO = new ViajeDAO();
+    private FidelizacionDAO fidelizacionDAO = new FidelizacionDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -82,6 +84,7 @@ public class VentaServlet extends HttpServlet {
             }
         } catch (Exception e) {
             System.err.println("Error en VentaServlet GET: " + e.getMessage());
+            request.setAttribute("errorMsg", "Ocurrió un error al procesar la solicitud. Por favor, intenta nuevamente.");
         }
 
         // Determinar a qué página forward según el rol del usuario
@@ -138,6 +141,8 @@ public class VentaServlet extends HttpServlet {
         String precioBoleto = request.getParameter("precioBoleto");
         String dni = request.getParameter("dni");
         String nombrePasajero = request.getParameter("nombrePasajero");
+        String metodoPago = request.getParameter("metodoPago");
+        if (metodoPago == null || metodoPago.isEmpty()) metodoPago = "EFECTIVO";
         
         String idOrigen = request.getParameter("idOrigen");
         String idDestino = request.getParameter("idDestino");
@@ -182,7 +187,9 @@ public class VentaServlet extends HttpServlet {
             con.setAutoCommit(false);
             try {
                 int idCliente = buscarOCrearCliente(con, dni, nombreApellido[0], nombreApellido[1]);
-                int idPasajeGenerado = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal, idVendedor);
+                int idPasajeGenerado = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal, idVendedor, metodoPago);
+                // Acumular puntos de fidelización
+                fidelizacionDAO.acumularPuntosEnTransaccion(con, idCliente, precioFinal, idPasajeGenerado);
                 con.commit();
                 response.sendRedirect("pasaje-confirmado.jsp?idPasaje=" + idPasajeGenerado);
             } catch (SQLException ex) {
@@ -202,6 +209,8 @@ public class VentaServlet extends HttpServlet {
         String idOrigen = request.getParameter("idOrigen");
         String idDestino = request.getParameter("idDestino");
         String fecha = request.getParameter("fecha");
+        String metodoPago = request.getParameter("metodoPago");
+        if (metodoPago == null || metodoPago.isEmpty()) metodoPago = "EFECTIVO";
         
         String baseRedirect = "VentaServlet?accion=verAsientos&idViaje=" + idViajeParam + 
                               "&idOrigen=" + idOrigen + "&idDestino=" + idDestino + "&fecha=" + fecha;
@@ -262,7 +271,9 @@ public class VentaServlet extends HttpServlet {
                     String[] nombreApellido = separarNombre(nombrePasajero);
                     
                     int idCliente = buscarOCrearCliente(con, dni, nombreApellido[0], nombreApellido[1]);
-                    int idPasaje = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal, idVendedor);
+                    int idPasaje = insertarPasaje(con, idViaje, idCliente, numAsiento, precioFinal, idVendedor, metodoPago);
+                    // Acumular puntos de fidelización por cada pasaje
+                    fidelizacionDAO.acumularPuntosEnTransaccion(con, idCliente, precioFinal, idPasaje);
                     
                     if (idsGenerados.length() > 0) idsGenerados.append(",");
                     idsGenerados.append(idPasaje);
@@ -324,14 +335,15 @@ public class VentaServlet extends HttpServlet {
     // Metodos auxiliares
     
     private String[] separarNombre(String nombreCompleto) {
-        String nombre = nombreCompleto;
+        String trimmed = nombreCompleto != null ? nombreCompleto.trim() : "-";
+        String nombre = trimmed;
         String apellido = "-";
-        if (nombreCompleto != null && nombreCompleto.contains(" ")) {
-            int espacio = nombreCompleto.indexOf(" ");
-            nombre = nombreCompleto.substring(0, espacio);
-            apellido = nombreCompleto.substring(espacio + 1);
+        if (trimmed.contains(" ")) {
+            int espacio = trimmed.indexOf(" ");
+            nombre = trimmed.substring(0, espacio);
+            apellido = trimmed.substring(espacio + 1).trim();
         }
-        return new String[]{nombre, apellido};
+        return new String[]{nombre, apellido.isEmpty() ? "-" : apellido};
     }
     
     private int buscarOCrearCliente(Connection con, String dni, String nombre, String apellido) throws SQLException {
@@ -359,7 +371,7 @@ public class VentaServlet extends HttpServlet {
         throw new SQLException("No se pudo crear el cliente con DNI: " + dni);
     }
     
-    private int insertarPasaje(Connection con, int idViaje, int idCliente, int numAsiento, double precio, Integer idVendedor) throws SQLException {
+    private int insertarPasaje(Connection con, int idViaje, int idCliente, int numAsiento, double precio, Integer idVendedor, String metodoPago) throws SQLException {
         String sql = "INSERT INTO Pasaje (id_viaje, id_cliente, id_bus_asiento, precio_pagado, estado, fecha_emision) " +
                      "OUTPUT INSERTED.id_pasaje " +
                      "VALUES (?, ?, (SELECT id_bus_asiento FROM Bus_Asiento WHERE id_bus = (SELECT id_bus FROM Viaje WHERE id_viaje = ?) AND numero_asiento = ?), ?, 'ACTIVO', GETDATE())";
@@ -372,14 +384,15 @@ public class VentaServlet extends HttpServlet {
             try (var rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int idPasaje = rs.getInt(1);
-                    String sqlPago = "INSERT INTO Pago (monto_total, metodo_pago, id_pasaje, id_vendedor) VALUES (?, 'EFECTIVO', ?, ?)";
+                    String sqlPago = "INSERT INTO Pago (monto_total, metodo_pago, id_pasaje, id_vendedor) VALUES (?, ?, ?, ?)";
                     try (PreparedStatement psPago = con.prepareStatement(sqlPago)) {
                         psPago.setDouble(1, precio);
-                        psPago.setInt(2, idPasaje);
+                        psPago.setString(2, metodoPago);
+                        psPago.setInt(3, idPasaje);
                         if (idVendedor != null) {
-                            psPago.setInt(3, idVendedor);
+                            psPago.setInt(4, idVendedor);
                         } else {
-                            psPago.setNull(3, java.sql.Types.INTEGER);
+                            psPago.setNull(4, java.sql.Types.INTEGER);
                         }
                         psPago.executeUpdate();
                     }

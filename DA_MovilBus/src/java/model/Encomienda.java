@@ -1,11 +1,14 @@
 package model;
 
-import java.sql.Timestamp;public class Encomienda {
+import java.sql.Timestamp;
+
+public class Encomienda {
     private int idEncomienda;
+    private String codigoSeguimiento;
     private String descripcionContenido;
     private double pesoKg;
     private double precioEnvio;
-    private String estado; // 'REGISTRADO', 'EN VIAJE', 'ENTREGADO', 'ANULADO'
+    private String estado; // 'REGISTRADO', 'EN ORIGEN', 'EN TRANSITO', 'EN DESTINO', 'ENTREGADO', 'ANULADO'
     private Timestamp fechaEnvio;
     private Timestamp fechaEntregaReal;
     
@@ -41,6 +44,9 @@ import java.sql.Timestamp;public class Encomienda {
     // Getters y Setters
     public int getIdEncomienda() { return idEncomienda; }
     public void setIdEncomienda(int idEncomienda) { this.idEncomienda = idEncomienda; }
+
+    public String getCodigoSeguimiento() { return codigoSeguimiento; }
+    public void setCodigoSeguimiento(String codigoSeguimiento) { this.codigoSeguimiento = codigoSeguimiento; }
 
     public String getDescripcionContenido() { return descripcionContenido; }
     public void setDescripcionContenido(String descripcionContenido) { this.descripcionContenido = descripcionContenido; }

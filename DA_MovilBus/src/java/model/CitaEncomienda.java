@@ -1,6 +1,8 @@
 package model;
 
-import java.sql.Timestamp;public class CitaEncomienda {
+import java.sql.Timestamp;
+
+public class CitaEncomienda {
     private int idCita;
     private int idCliente;       // FK → Cliente (quien agenda)
     private int idOrigen;        // FK → Ciudades

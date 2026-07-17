@@ -1,7 +1,7 @@
 <%-- Landing page principal de MovilBus, acceso publico para busqueda y compra de pasajes --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
-<%@page import="dao.CiudadDAO, model.Ciudad, model.Usuario, java.util.List"%>
+<%@page import="dao.CiudadDAO, model.Ciudad, model.Usuario, java.util.List, util.EscapeUtil"%>
 <%
     CiudadDAO ciudadDAO = new CiudadDAO();
     List<Ciudad> ciudadesActivas = ciudadDAO.listarActivas();
@@ -27,46 +27,93 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/movilbus.css">
+    <style>
+        .pago-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: .6rem .3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            background: white;
+        }
+        .pago-option:hover {
+            border-color: var(--mvb-orange);
+            background: #FFF8E1;
+        }
+        .pago-option.active {
+            border-color: var(--mvb-orange);
+            background: #FFF3E0;
+            box-shadow: 0 0 0 3px rgba(255,107,0,.15);
+        }
+        .pago-option i {
+            font-size: 1.4rem;
+            display: block;
+            margin-bottom: 2px;
+            color: var(--mvb-orange);
+        }
+        .pago-option small {
+            font-size: .65rem;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+    </style>
 </head>
 <body>
 
     <!-- ============================================================
          HEADER / NAVBAR (sin Intranet, solo para clientes)
+         Diseno estable: 3 particiones fijas (Brand | NavLinks | UserArea)
          ============================================================ -->
     <nav class="navbar navbar-expand-lg navbar-movilbus sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="index.jsp">
+            <!-- Particion 1: Brand (tamano fijo) -->
+            <a class="navbar-brand flex-shrink-0" href="index.jsp">
                 <i class="bi bi-bus-front me-2"></i>MovilBus
             </a>
+
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarMain">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <!-- Particion 2: NavLinks (ocupa el espacio restante, flex-nowrap para no romper) -->
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0" style="flex-wrap:nowrap;">
                     <li class="nav-item"><a class="nav-link active" href="index.jsp">Inicio</a></li>
-                    <% if (!nombreCliente.isEmpty()) { %>
-                        <li class="nav-item"><a class="nav-link" href="VentaServlet?accion=historial"><i class="bi bi-clock-history me-1"></i>Mis Viajes</a></li>
-                        <li class="nav-item"><a class="nav-link" href="EncomiendaServlet?accion=historialEncomienda"><i class="bi bi-box-seam me-1"></i>Mis Envíos</a></li>
-                    <% } %>
+                    <!-- Items de cliente SIEMPRE en el DOM, se ocultan/muestran sin afectar layout -->
+                    <li class="nav-item" id="navItemPuntos" style="<%= nombreCliente.isEmpty() ? "display:none;" : "" %>">
+                        <a class="nav-link" href="FidelizacionServlet?accion=misPuntos"><i class="bi bi-star me-1"></i>Mis Puntos</a>
+                    </li>
+                    <li class="nav-item" id="navItemViajes" style="<%= nombreCliente.isEmpty() ? "display:none;" : "" %>">
+                        <a class="nav-link" href="VentaServlet?accion=historial"><i class="bi bi-clock-history me-1"></i>Mis Viajes</a>
+                    </li>
+                    <li class="nav-item" id="navItemEnvios" style="<%= nombreCliente.isEmpty() ? "display:none;" : "" %>">
+                        <a class="nav-link" href="EncomiendaServlet?accion=historialEncomienda"><i class="bi bi-box-seam me-1"></i>Mis Envios</a>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
                     <li class="nav-item"><a class="nav-link" href="#encomiendas"><i class="bi bi-box-seam me-1"></i>Encomiendas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="tracking.jsp"><i class="bi bi-upc-scan me-1"></i>Rastrear</a></li>
                     <li class="nav-item"><a class="nav-link" href="#destinos">Destinos</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
                 </ul>
-                <div class="d-flex gap-2">
+
+                <!-- Particion 3: UserArea (ancho fijo exacto, no se expande/contrae al loguearse) -->
+                <div class="user-area-partition flex-shrink-0" style="width:210px; text-align:right;">
                     <% if (nombreCliente.isEmpty()) { %>
-                        <!-- Usuario no logueado -->
-                        <button class="btn btn-ingresar-cliente" data-bs-toggle="modal" data-bs-target="#modalLoginCliente">
+                        <button class="btn btn-ingresar-cliente" data-bs-toggle="modal" data-bs-target="#modalLoginCliente" style="width:100%;">
                             <i class="bi bi-person me-1"></i> Mi Cuenta
                         </button>
                     <% } else { %>
-                        <!-- Usuario logueado (cliente) -->
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-light text-dark p-2 rounded-pill">
-                                <i class="bi bi-person-check text-success me-1"></i><%= nombreCliente %>
+                        <div class="d-flex align-items-center justify-content-end gap-2" style="flex-wrap:nowrap;">
+                            <span class="badge bg-light text-dark py-2 px-3 rounded-pill d-inline-flex align-items-center gap-1 text-truncate"
+                                  style="font-size:.8rem; max-width:160px;">
+                                <i class="bi bi-person-check text-success flex-shrink-0"></i>
+                                <span class="text-truncate"><%= nombreCliente %></span>
                             </span>
-                            <a href="LogoutServlet" class="btn btn-outline-danger btn-sm rounded-pill">
-                                <i class="bi bi-box-arrow-right me-1"></i> Salir
+                            <a href="LogoutServlet" class="btn btn-outline-danger btn-sm rounded-pill flex-shrink-0">
+                                <i class="bi bi-box-arrow-right"></i>
                             </a>
                         </div>
                     <% } %>
@@ -118,10 +165,36 @@
         </div>
     </div>
     <% } %>
+    
+    <!-- Alertas de canje de puntos -->
+    <% if ("exito".equals(request.getParameter("canje"))) { %>
+    <div class="container mt-3">
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-gift-fill fs-4" style="color: var(--mvb-orange);"></i>
+                <div>
+                    <strong>¡Canje exitoso!</strong><br>
+                    <span>Obtuviste S/ <%= EscapeUtil.escHtml(request.getParameter("descuento")) %> de descuento en tu próxima compra.</span>
                 </div>
             </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    </nav>
+    </div>
+    <% } %>
+    <% if ("error".equals(request.getParameter("canje"))) { %>
+    <div class="container mt-3">
+        <div class="alert alert-warning alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                <div>
+                    <strong>Canje no procesado.</strong><br>
+                    <span><%= EscapeUtil.escHtml(request.getParameter("msg") != null ? request.getParameter("msg") : "Verifica tus puntos e inténtalo nuevamente.") %></span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+    <% } %>
 
     <!-- ============================================================
          HERO SECTION
@@ -225,10 +298,25 @@
                                 </div>
                             </div>
 
-                            <!-- Fecha -->
+                            <!-- Fecha (default: maniana) -->
                             <div class="col-md-2">
                                 <label class="form-label"><i class="bi bi-calendar me-1"></i>Fecha</label>
-                                <input type="date" class="form-control" name="fecha" required>
+                                <input type="date" class="form-control" name="fecha" id="inputFechaBusqueda"
+                                       value="<%= request.getParameter("fecha") != null ? request.getParameter("fecha") : "" %>" required>
+                                <script>
+                                    // Fijar fecha por defecto a maniana solo si no hay fecha en la URL
+                                    (function() {
+                                        var input = document.getElementById('inputFechaBusqueda');
+                                        if (input && !input.value) {
+                                            var maniana = new Date();
+                                            maniana.setDate(maniana.getDate() + 1);
+                                            var dd = String(maniana.getDate()).padStart(2,'0');
+                                            var mm = String(maniana.getMonth()+1).padStart(2,'0');
+                                            var yyyy = maniana.getFullYear();
+                                            input.value = yyyy+'-'+mm+'-'+dd;
+                                        }
+                                    })();
+                                </script>
                             </div>
 
                             <!-- Botón -->
@@ -291,6 +379,28 @@
                             </c:forEach>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    </c:if>
+
+    <!-- Mensaje cuando no hay resultados de busqueda -->
+    <c:if test="${param.accion == 'buscar' and empty listaViajesBusqueda}">
+    <section class="py-4" id="sin-resultados">
+        <div class="container">
+            <div class="card shadow-sm border-0 rounded-4 p-4 animate-up">
+                <div class="text-center py-4">
+                    <i class="bi bi-search-heart" style="font-size:3rem; color:var(--mvb-orange); opacity:.4;"></i>
+                    <h5 class="fw-bold mt-3 mb-1">No se encontraron viajes</h5>
+                    <p class="text-muted mb-0">
+                        No hay viajes programados para la ruta y fecha seleccionadas.
+                        Prueba con otra fecha o cambia el origen/destino.
+                    </p>
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Los viajes disponibles se muestran a partir de maniana.
+                    </small>
                 </div>
             </div>
         </div>
@@ -480,6 +590,82 @@
                                 <small class="text-white-50" id="totalCantidadIdx">0 pasaje(s)</small>
                             </div>
 
+                            <!-- Metodo de Pago -->
+                            <div class="mb-3" id="metodoPagoGroupIdx" style="display:none;">
+                                <label class="form-label fw-bold"><i class="bi bi-credit-card me-1"></i>Metodo de Pago</label>
+                                <input type="hidden" name="metodoPago" id="metodoPagoInputIdx" value="EFECTIVO">
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <div class="pago-option active" data-metodo="EFECTIVO" onclick="seleccionarPagoIdx(this)">
+                                            <i class="bi bi-cash"></i>
+                                            <small>Efectivo</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="pago-option" data-metodo="YAPE" onclick="seleccionarPagoIdx(this)">
+                                            <i class="bi bi-phone"></i>
+                                            <small>Yape</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="pago-option" data-metodo="PLIN" onclick="seleccionarPagoIdx(this)">
+                                            <i class="bi bi-phone"></i>
+                                            <small>Plin</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="pago-option" data-metodo="TARJETA" onclick="seleccionarPagoIdx(this)">
+                                            <i class="bi bi-credit-card-2-front"></i>
+                                            <small>Tarjeta</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="pago-option" data-metodo="TRANSFERENCIA" onclick="seleccionarPagoIdx(this)">
+                                            <i class="bi bi-bank"></i>
+                                            <small>Transferencia</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- QR Yape/Plin (dinamico) -->
+                                <div id="qrPagoMovilIdx" style="display:none;" class="text-center mt-3 p-3 bg-light rounded-3">
+                                    <img id="qrImgIdx" src="" alt="QR de pago" style="width:130px;height:130px;border-radius:12px;">
+                                    <div class="small text-muted mt-2">
+                                        <i class="bi bi-phone me-1"></i>
+                                        Escanea con tu app <strong id="qrLabelIdx">Yape</strong> para pagar
+                                    </div>
+                                </div>
+
+                                <!-- Formulario Tarjeta (simulado) -->
+                                <div id="formTarjetaIdx" style="display:none;" class="mt-3 p-3 bg-light rounded-3">
+                                    <div class="row g-2">
+                                        <div class="col-12">
+                                            <label class="small">Numero de Tarjeta</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="1234 5678 9012 3456" maxlength="19">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="small">Vencimiento</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="MM/AA">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="small">CVV</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="123" maxlength="4">
+                                        </div>
+                                    </div>
+                                    <div class="small text-muted mt-2">
+                                        <i class="bi bi-shield-lock me-1"></i>Pago seguro - Datos encriptados
+                                    </div>
+                                </div>
+
+                                <!-- Transferencia -->
+                                <div id="infoTransferenciaIdx" style="display:none;" class="mt-3 p-3 bg-light rounded-3 text-center small">
+                                    <i class="bi bi-bank2 me-1"></i>
+                                    <strong>Banco de la Nacion</strong><br>
+                                    Cuenta Corriente: <strong>123-456789-0-00</strong><br>
+                                    Titular: <strong>MovilBus S.A.C.</strong>
+                                </div>
+                            </div>
+
                             <button type="submit" class="btn btn-ingresar btn-lg w-100 fw-bold rounded-pill shadow-sm" id="btnConfirmarIdx" disabled>
                                 <i class="bi bi-ticket-check me-2"></i> Confirmar y Emitir Pasajes
                             </button>
@@ -580,6 +766,133 @@
                     <a href="#buscador" class="btn btn-ingresar rounded-pill btn-sm">
                         <i class="bi bi-ticket-perforated me-1"></i> Comprar nuevo pasaje
                     </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    </c:if>
+
+    <!-- ============================================================
+         MIS PUNTOS DE FIDELIZACIÓN
+         (visible solo cuando CLIENTE_WEB está logueado y hay datos)
+         ============================================================ -->
+    <c:if test="${not empty puntosCliente}">
+    <section class="py-4" id="mis-puntos">
+        <div class="container">
+            <div class="card shadow-sm border-0 rounded-4 p-4 animate-up">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-star fs-4 text-warning me-2"></i>
+                    <h5 class="fw-bold mb-0">Mis Puntos de Fidelización</h5>
+                    <span class="ms-auto">
+                        <span class="badge" 
+                              style="background:${puntosCliente.nivelColor}; color:#fff; font-size:.8rem; padding:.4rem .8rem;">
+                            <i class="${puntosCliente.nivelIcono} me-1"></i>${puntosCliente.nombreNivel}
+                        </span>
+                    </span>
+                </div>
+
+                <!-- Tarjeta principal de puntos -->
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="bg-light rounded-3 p-4 text-center">
+                            <small class="text-muted text-uppercase fw-bold" style="font-size:.7rem;">Puntos Disponibles</small>
+                            <div class="display-5 fw-bold" style="color: var(--mvb-orange);">${puntosCliente.puntosDisponibles}</div>
+                            <small class="text-muted">Acumulados: ${puntosCliente.puntosAcumulados} · Canjeados: ${puntosCliente.puntosCanjeados}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-light rounded-3 p-4 text-center">
+                            <small class="text-muted text-uppercase fw-bold" style="font-size:.7rem;">Nivel Actual</small>
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <i class="${puntosCliente.nivelIcono}" style="font-size:2rem; color:${puntosCliente.nivelColor};"></i>
+                                <span class="fs-3 fw-bold" style="color:${puntosCliente.nivelColor};">${puntosCliente.nombreNivel}</span>
+                            </div>
+                            <small class="text-muted">${puntosCliente.descuentoNivel}% de descuento en tu nivel</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-light rounded-3 p-4 text-center">
+                            <small class="text-muted text-uppercase fw-bold" style="font-size:.7rem;">Próximo Nivel</small>
+                            <div class="fs-5 fw-bold text-dark">${puntosCliente.siguienteNivel}</div>
+                            <small class="text-muted">Faltan ${puntosCliente.puntosFaltantesSiguienteNivel} puntos</small>
+                            <div class="progress mt-2" style="height:6px;">
+                                <div class="progress-bar bg-warning" style="width:${puntosCliente.progresoSiguienteNivel}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Canje de puntos -->
+                <c:if test="${puntosCliente.puntosDisponibles >= 100}">
+                <div class="mt-3 p-3 bg-white rounded-3 border">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-gift me-1 text-success"></i>Canjear Puntos por Descuento</h6>
+                    <p class="small text-muted mb-2">
+                        Cada 100 puntos = S/ 1 de descuento en tu próximo pasaje. 
+                        Tienes <strong>${puntosCliente.puntosDisponibles} puntos</strong> 
+                        = <strong>S/ ${puntosCliente.puntosDisponibles / 100}</strong> de descuento potencial.
+                    </p>
+                    <form action="FidelizacionServlet" method="POST" class="row g-2 align-items-end">
+                        <input type="hidden" name="accion" value="canjear">
+                        <div class="col-md-4">
+                            <label class="form-label small">Puntos a canjear</label>
+                            <input type="number" class="form-control form-control-sm" name="puntosCanje" 
+                                   min="100" max="${puntosCliente.puntosDisponibles}" 
+                                   step="100" value="${puntosCliente.puntosDisponibles - (puntosCliente.puntosDisponibles % 100)}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-success btn-sm rounded-pill">
+                                <i class="bi bi-gift me-1"></i> Canjear Ahora
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block mt-1">
+                                <i class="bi bi-info-circle me-1"></i>100 pts = S/ 1
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                </c:if>
+
+                <!-- Historial de transacciones -->
+                <c:if test="${not empty transaccionesPuntos}">
+                <div class="mt-3">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-clock-history me-1"></i>Últimas Transacciones</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Puntos</th>
+                                    <th>Descripción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="t" items="${transaccionesPuntos}">
+                                    <tr>
+                                        <td><small>${t.fecha}</small></td>
+                                        <td>
+                                            <span class="badge ${t.tipo == 'ACUMULACION' ? 'bg-success' : 'bg-warning text-dark'}">
+                                                ${t.tipo == 'ACUMULACION' ? '+' : '-'}${t.tipo}
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold ${t.tipo == 'ACUMULACION' ? 'text-success' : 'text-danger'}">
+                                            ${t.tipo == 'ACUMULACION' ? '+' : '-'}${t.puntos}
+                                        </td>
+                                        <td><small>${t.descripcion}</small></td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </c:if>
+
+                <div class="mt-3 text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ganas 1 punto por cada S/ 10 en pasajes. Canjea desde 100 puntos.
+                    </small>
                 </div>
             </div>
         </div>
@@ -1425,6 +1738,8 @@
             if (placeholder) placeholder.style.display = 'block';
             if (contPasajeros) contPasajeros.innerHTML = '';
             if (totalBox) totalBox.style.display = 'none';
+            const metodoPagoGroup = document.getElementById('metodoPagoGroupIdx');
+            if (metodoPagoGroup) metodoPagoGroup.style.display = 'none';
             if (btnConfirmar) btnConfirmar.disabled = true;
             return;
         }
@@ -1490,7 +1805,39 @@
         if (contPasajeros) contPasajeros.innerHTML = htmlPasajeros;
         
         if (totalBox) totalBox.style.display = 'block';
+        // Mostrar metodo de pago
+        const metodoPagoGroup = document.getElementById('metodoPagoGroupIdx');
+        if (metodoPagoGroup) metodoPagoGroup.style.display = 'block';
         if (btnConfirmar) btnConfirmar.disabled = false;
+    }
+
+    function seleccionarPagoIdx(el) {
+        document.querySelectorAll('#metodoPagoGroupIdx .pago-option').forEach(function(e) {
+            e.classList.remove('active');
+        });
+        el.classList.add('active');
+
+        const metodo = el.getAttribute('data-metodo');
+        document.getElementById('metodoPagoInputIdx').value = metodo;
+
+        document.getElementById('qrPagoMovilIdx').style.display = 'none';
+        document.getElementById('formTarjetaIdx').style.display = 'none';
+        document.getElementById('infoTransferenciaIdx').style.display = 'none';
+
+        if (metodo === 'YAPE' || metodo === 'PLIN') {
+            const qrDiv = document.getElementById('qrPagoMovilIdx');
+            qrDiv.style.display = 'block';
+            const label = metodo === 'YAPE' ? 'Yape' : 'Plin';
+            document.getElementById('qrLabelIdx').textContent = label;
+            const total = document.getElementById('totalFinalIdx').textContent.trim();
+            const qrImg = document.getElementById('qrImgIdx');
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MovilBus%20'
+                + encodeURIComponent(label) + '%20-%20S/.' + encodeURIComponent(total);
+        } else if (metodo === 'TARJETA') {
+            document.getElementById('formTarjetaIdx').style.display = 'block';
+        } else if (metodo === 'TRANSFERENCIA') {
+            document.getElementById('infoTransferenciaIdx').style.display = 'block';
+        }
     }
     </script>
 </body>

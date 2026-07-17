@@ -1,6 +1,6 @@
 <%-- Pagina de inicio de sesion para el personal de MovilBus (intranet) --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@page import="model.Usuario"%>
+<%@page import="model.Usuario, util.EscapeUtil"%>
 <%
     // Si el usuario ya está logueado como CLIENTE_WEB, redirigir a ventas.jsp
     Usuario userLogin = (Usuario) session.getAttribute("usuarioSesion");
@@ -53,7 +53,7 @@
 
             <% if (request.getAttribute("error") != null) { %>
                 <div class="alert alert-danger py-2 text-center small" role="alert">
-                    <i class="bi bi-exclamation-triangle me-1"></i> <%= request.getAttribute("error") %>
+                    <i class="bi bi-exclamation-triangle me-1"></i> <%= EscapeUtil.escHtml((String) request.getAttribute("error")) %>
                 </div>
             <% } %>
 

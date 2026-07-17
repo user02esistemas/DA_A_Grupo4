@@ -18,6 +18,7 @@
     
     request.setAttribute("listaConductores", disponibles);
     request.setAttribute("listaViajes", viajeDAO.listarViajesProgramados());
+    request.setAttribute("listaViajesHistorial", viajeDAO.listarTodosLosViajes());
 %>
 <%
     // Control de acceso: solo ADMINISTRADOR puede gestionar viajes
@@ -161,8 +162,22 @@
                                     <h5 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i>Itinerarios Programados</h5>
                                     <span class="badge bg-primary rounded-pill">${listaViajes.size()} viajes</span>
                                 </div>
+                                <!-- Toggle: Proximos vs Historial -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-primary active" id="btnProximos" onclick="toggleTabla('proximos')">
+                                            <i class="bi bi-calendar-event me-1"></i> Próximos Viajes
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="btnHistorial" onclick="toggleTabla('historial')">
+                                            <i class="bi bi-clock-history me-1"></i> Historial Completo
+                                        </button>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill" id="badgeCount">${listaViajes.size()} viajes</span>
+                                </div>
+
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
+                                    <!-- Tabla: Proximos Viajes -->
+                                    <table class="table table-hover align-middle mb-0" id="tablaProximos">
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
@@ -216,6 +231,68 @@
                                                         <div class="empty-state">
                                                             <i class="bi bi-calendar-event text-muted"></i>
                                                             <p class="mb-0">No hay salidas programadas actualmente.</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </c:if>
+                                        </tbody>
+                                    </table>
+
+                                    <!-- Tabla: Historial Completo -->
+                                    <table class="table table-hover align-middle mb-0" id="tablaHistorial" style="display:none;">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Ruta</th>
+                                                <th>Salida</th>
+                                                <th>Llegada Est.</th>
+                                                <th>Bus</th>
+                                                <th class="text-center">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach var="v" items="${listaViajesHistorial}">
+                                                <tr class="${v.estado == 'FINALIZADO' ? 'table-light' : v.estado == 'CANCELADO' ? 'table-danger' : ''}">
+                                                    <td><span class="text-muted small fw-bold">#${v.idViaje}</span></td>
+                                                    <td class="fw-semibold">${v.nombreRuta}</td>
+                                                    <td>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-calendar3 me-1"></i>${v.fechaHora}
+                                                        </small>
+                                                    </td>
+                                                    <td>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-clock me-1"></i>${v.fechaHoraLlegada}
+                                                        </small>
+                                                    </td>
+                                                    <td><span class="badge bg-dark">${v.placaBus}</span></td>
+                                                    <td class="text-center">
+                                                        <c:choose>
+                                                            <c:when test="${v.estado == 'PROGRAMADO'}">
+                                                                <span class="badge bg-primary">${v.estado}</span>
+                                                            </c:when>
+                                                            <c:when test="${v.estado == 'EN_RUTA'}">
+                                                                <span class="badge bg-success">${v.estado}</span>
+                                                            </c:when>
+                                                            <c:when test="${v.estado == 'FINALIZADO'}">
+                                                                <span class="badge bg-secondary">${v.estado}</span>
+                                                            </c:when>
+                                                            <c:when test="${v.estado == 'CANCELADO'}">
+                                                                <span class="badge bg-danger">${v.estado}</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="badge bg-warning text-dark">${v.estado}</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                            <c:if test="${empty listaViajesHistorial}">
+                                                <tr>
+                                                    <td colspan="6">
+                                                        <div class="empty-state">
+                                                            <i class="bi bi-calendar-event text-muted"></i>
+                                                            <p class="mb-0">No hay viajes registrados.</p>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -283,6 +360,30 @@
                     }
                 }
             });
+        }
+
+        function toggleTabla(vista) {
+            const tablaProx = document.getElementById('tablaProximos');
+            const tablaHist = document.getElementById('tablaHistorial');
+            const btnProx = document.getElementById('btnProximos');
+            const btnHist = document.getElementById('btnHistorial');
+            const badge = document.getElementById('badgeCount');
+
+            if (vista === 'proximos') {
+                tablaProx.style.display = '';
+                tablaHist.style.display = 'none';
+                btnProx.classList.add('active');
+                btnHist.classList.remove('active');
+                badge.textContent = '${listaViajes.size()} viaje(s)';
+                badge.className = 'badge bg-primary rounded-pill';
+            } else {
+                tablaProx.style.display = 'none';
+                tablaHist.style.display = '';
+                btnProx.classList.remove('active');
+                btnHist.classList.add('active');
+                badge.textContent = '${listaViajesHistorial.size()} viaje(s)';
+                badge.className = 'badge bg-secondary rounded-pill';
+            }
         }
 
         setTimeout(function() {

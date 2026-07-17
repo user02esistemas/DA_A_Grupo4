@@ -35,6 +35,9 @@
             <a class="nav-link <%= "viajes".equals(active) ? "active" : "" %>" href="viajes.jsp">
                 <i class="bi bi-calendar-event"></i> Viajes
             </a>
+            <a class="nav-link <%= "mantenimiento".equals(active) ? "active" : "" %>" href="MantenimientoServlet">
+                <i class="bi bi-tools"></i> Mantenimiento
+            </a>
         <% } %>
         <a class="nav-link <%= "ventas".equals(active) ? "active" : "" %>" href="ventas.jsp">
             <i class="bi bi-ticket-perforated"></i> Vender Pasaje
@@ -45,6 +48,14 @@
         <a class="nav-link <%= "encomiendas".equals(active) ? "active" : "" %>" href="EncomiendaServlet?accion=listar">
             <i class="bi bi-box-seam"></i> Encomiendas
         </a>
+        <a class="nav-link <%= "reportes".equals(active) ? "active" : "" %>" href="ReporteServlet?accion=ventas">
+            <i class="bi bi-file-earmark-bar-graph"></i> Reportes
+        </a>
+        <% if (isAdmin) { %>
+        <a class="nav-link <%= "fidelizacion".equals(active) ? "active" : "" %>" href="FidelizacionServlet?accion=admin">
+            <i class="bi bi-star"></i> Fidelización
+        </a>
+        <% } %>
         <hr class="text-white opacity-25 my-3 mx-3">
         <a class="nav-link text-danger" href="LogoutServlet">
             <i class="bi bi-box-arrow-right"></i> Salir

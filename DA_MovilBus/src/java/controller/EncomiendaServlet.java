@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Map;
 
 @WebServlet(name = "EncomiendaServlet", urlPatterns = {"/EncomiendaServlet"})
 public class EncomiendaServlet extends HttpServlet {
@@ -30,6 +31,26 @@ public class EncomiendaServlet extends HttpServlet {
         if (accion == null) accion = "";
 
         try {
+            // Accion publica: tracking por codigo de seguimiento (no requiere login)
+            if ("tracking".equals(accion)) {
+                String codigo = request.getParameter("codigo");
+                if (codigo != null && !codigo.trim().isEmpty()) {
+                    String codigoTrim = codigo.trim().toUpperCase();
+                    Map<String, Object> encomienda = encomiendaDAO.obtenerEncomiendaPorCodigo(codigoTrim);
+                    if (encomienda != null) {
+                        int idEncomienda = (int) encomienda.get("idEncomienda");
+                        request.setAttribute("encomiendaTracking", encomienda);
+                        request.setAttribute("historialEstados", encomiendaDAO.obtenerHistorialEstados(idEncomienda));
+                        request.getRequestDispatcher("tracking.jsp").forward(request, response);
+                    } else {
+                        response.sendRedirect("tracking.jsp?notfound=1");
+                    }
+                } else {
+                    response.sendRedirect("tracking.jsp");
+                }
+                return;
+            }
+
                 // Accion publica para clientes: historialEncomienda
             if ("historialEncomienda".equals(accion)) {
                 HttpSession sess = request.getSession(false);

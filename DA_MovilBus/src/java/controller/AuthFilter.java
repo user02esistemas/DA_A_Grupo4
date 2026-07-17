@@ -15,7 +15,9 @@ import model.Usuario;
 
 @WebFilter(filterName = "AuthFilter", urlPatterns = {
     "/dashboard.jsp", "/buses.jsp", "/viajes.jsp", "/historial-ventas.jsp",
-    "/conductores.jsp", "/ciudades.jsp", "/rutas.jsp"
+    "/conductores.jsp", "/ciudades.jsp", "/rutas.jsp",
+    "/encomiendas.jsp", "/ventas.jsp", "/vendedores.jsp", "/reportes.jsp",
+    "/mantenimiento.jsp", "/fidelizacion-admin.jsp"
 })
 public class AuthFilter implements Filter {
 

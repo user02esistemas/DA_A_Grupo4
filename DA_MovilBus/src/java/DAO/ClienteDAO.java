@@ -3,6 +3,7 @@ package dao;
 import config.ConexionBD;
 import model.Cliente;
 import model.Usuario;
+import util.PasswordUtil;
 import java.sql.*;
 
 public class ClienteDAO {
@@ -23,7 +24,7 @@ public class ClienteDAO {
             // 1. Insertar el Usuario
             psUser = con.prepareStatement(sqlUsuario, Statement.RETURN_GENERATED_KEYS);
             psUser.setString(1, usuario.getUsername());
-            psUser.setString(2, usuario.getPassword()); // Considera usar hashing en producción
+            psUser.setString(2, PasswordUtil.hashPassword(usuario.getPassword()));
             psUser.setString(3, usuario.getNombre());
             psUser.setString(4, usuario.getApellido());
 

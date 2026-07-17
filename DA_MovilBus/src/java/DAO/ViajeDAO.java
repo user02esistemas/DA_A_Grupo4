@@ -125,7 +125,62 @@ public class ViajeDAO {
         }
     }
 
+    /**
+     * Finaliza automaticamente los viajes PROGRAMADO cuya fecha de salida ya paso.
+     * Se ejecuta internamente antes de cada listado programado.
+     */
+    public void finalizarViajesPasados() {
+        String sql = "UPDATE Viaje SET estado = 'FINALIZADO' " +
+                     "WHERE estado = 'PROGRAMADO' AND fecha_hora_salida < GETDATE()";
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            int actualizados = ps.executeUpdate();
+            if (actualizados > 0) {
+                System.out.println("[Auto] " + actualizados + " viaje(s) finalizados automaticamente.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al finalizar viajes pasados: " + e.getMessage());
+        }
+    }
+
     public List<Map<String, Object>> listarViajesProgramados() {
+        // Auto-finalizar viajes que ya pasaron
+        finalizarViajesPasados();
+        
+        List<Map<String, Object>> lista = new ArrayList<>();
+        String sql = "SELECT v.id_viaje, (o.nombre + ' - ' + d.nombre) AS nombre_ruta, " +
+                     "v.fecha_hora_salida, v.fecha_hora_llegada_estimada, b.placa, v.estado " +
+                     "FROM Viaje v " +
+                     "INNER JOIN Ruta r ON v.id_ruta = r.id_ruta " +
+                     "INNER JOIN Ciudades o ON r.id_origen = o.id_ciudad " +
+                     "INNER JOIN Ciudades d ON r.id_destino = d.id_ciudad " +
+                     "INNER JOIN Bus b ON v.id_bus = b.id_bus " +
+                     "WHERE v.estado NOT IN ('FINALIZADO', 'CANCELADO') " +
+                     "ORDER BY v.fecha_hora_salida ASC";
+
+        try (Connection con = ConexionBD.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Map<String, Object> viaje = new HashMap<>();
+                viaje.put("idViaje", rs.getInt("id_viaje"));
+                viaje.put("nombreRuta", rs.getString("nombre_ruta"));
+                viaje.put("fechaHora", rs.getTimestamp("fecha_hora_salida"));
+                viaje.put("fechaHoraLlegada", rs.getTimestamp("fecha_hora_llegada_estimada"));
+                viaje.put("placaBus", rs.getString("placa"));
+                viaje.put("estado", rs.getString("estado"));
+                lista.add(viaje);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al listar viajes: " + e.getMessage());
+        }
+        return lista;
+    }
+
+    /**
+     * Lista TODOS los viajes (incluyendo FINALIZADO y CANCELADO) para el historial completo.
+     */
+    public List<Map<String, Object>> listarTodosLosViajes() {
         List<Map<String, Object>> lista = new ArrayList<>();
         String sql = "SELECT v.id_viaje, (o.nombre + ' - ' + d.nombre) AS nombre_ruta, " +
                      "v.fecha_hora_salida, v.fecha_hora_llegada_estimada, b.placa, v.estado " +
@@ -150,12 +205,15 @@ public class ViajeDAO {
                 lista.add(viaje);
             }
         } catch (SQLException e) {
-            System.err.println("Error al listar viajes: " + e.getMessage());
+            System.err.println("Error al listar todos los viajes: " + e.getMessage());
         }
         return lista;
     }
 
     public List<Map<String, Object>> buscarViajesParaVenta(int idOrigen, int idDestino, String fecha) {
+        // Auto-finalizar viajes que ya pasaron antes de buscar
+        finalizarViajesPasados();
+        
         List<Map<String, Object>> lista = new ArrayList<>();
         String sql = "SELECT v.id_viaje, v.fecha_hora_salida, v.fecha_hora_llegada_estimada, " +
                      "o.nombre AS origen, d.nombre AS destino, b.placa, b.marca, b.capacidad_asientos, " +
@@ -167,7 +225,9 @@ public class ViajeDAO {
                      "INNER JOIN Bus b ON v.id_bus = b.id_bus " +
                      "INNER JOIN Servicio s ON b.id_servicio = s.id_servicio " +
                      "WHERE r.id_origen = ? AND r.id_destino = ? " +
-                     "AND CAST(v.fecha_hora_salida AS DATE) = ? AND v.estado = 'PROGRAMADO'";
+                     "AND CAST(v.fecha_hora_salida AS DATE) = ? " +
+                     "AND v.estado = 'PROGRAMADO' " +
+                     "AND v.fecha_hora_salida >= GETDATE()";
 
         try (Connection con = ConexionBD.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
